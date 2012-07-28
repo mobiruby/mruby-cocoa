@@ -1,25 +1,109 @@
-class IntValueTest1 < TestCase
-  def test_10_parameters
-    eq 4, CFunc::Int.size
-    eq 4, CFunc::Int.align
-  end
-
-  def test_20_set_and_verify
-    i = CFunc::Int.new
-    i.value = 1
-    eq 1, i.value
-  end
-
-  def test_30_array
-    ci = CFunc::CArray(CFunc::Int).new(10)
-    eq 10, ci.size
-    for i in 0..9
-      ci[i].value = i ** 2
-    end
-    for i in 0..9
-      eq i ** 2, ci[i].value
-    end
+class CreateInstanceTest1 < TestCase
+  def test_10_nsstring
+    @nsstr = Cocoa::NSString._stringWithUTF8String("string")
+    a @nsstr.is_a?(Cocoa::Object)
+    eq "<__NSCFConstantString", @nsstr.inspect[0,21]
+    eq 6, @nsstr._length.value
   end
 end
-IntValueTest1.run
+CreateInstanceTest1.run
+
+
+class Cocoa::MobiCocoaTest2 < Cocoa::MobiCocoaTest1
+  define CFunc::Int, :ruby_method1 do
+    1
+  end
+
+  define CFunc::Int, :ruby_method2, CFunc::Int do |i|
+    i.value ** 2
+  end
+end
+
+
+class MobiCocoaTest1Test < TestCase
+  def test_10_call_classmethod
+    @result1 = Cocoa::MobiCocoaTest1._classMethod1
+    a @result1.is_a?(Cocoa::Object)
+    eq "classMethod1Test", @result1._UTF8String.to_s
+  end
+
+  def test_20_create_instance
+    @test1 = Cocoa::MobiCocoaTest1._alloc._init
+    a @test1.is_a?(Cocoa::Object)
+  end
+
+  def test_30_call_instance_method1
+    result = @test1._intToString(CFunc::Int(10))
+    eq "value=10", result._UTF8String.to_s
+  end
+
+  def test_40_call_instance_method2_with_mruby_value
+    result = @test1._uint16ToString(CFunc::SInt8(-1))
+    eq "value=255", result._UTF8String.to_s
+  end
+
+  def test_50_call_instance_method2_with_ruby_value
+    result = @test1._uint16ToString(-1)
+    eq "value=65535", result._UTF8String.to_s
+  end
+
+  def test_60_prop_get
+    result = @test1[:prop1]
+    eq "PROP1_", result._UTF8String.to_s
+  end
+
+  def test_70_prop_get
+    val = Cocoa::NSString._stringWithUTF8String("PROP2")
+    @test1[:prop2] = val
+    result = @test1[:prop2]
+    eq "PROP2", result._UTF8String.to_s
+
+    @test1[:prop2] = Cocoa::NSString._stringWithUTF8String("PROP2_")
+    result = @test1[:prop2]
+    eq "PROP2_", result._UTF8String.to_s
+  end
+end
+MobiCocoaTest1Test.run
+
+
+class MobiCocoaTest2Test < TestCase
+  
+  def test_10_call_rubymethod1
+    test2 = Cocoa::MobiCocoaTest2._alloc._init
+    a test2.is_a?(Cocoa::Object)
+    eq 1, test2._ruby_method1.value
+  end
+
+  def _test_20_call_rubymethod2
+    test2 = Cocoa::MobiCocoaTest2._alloc._init
+    eq 9, test2._ruby_method2(3).value
+  end
+
+end
+MobiCocoaTest2Test.run
+
+
+class MobiBlocksTest1 < TestCase
+
+  def test_10_call_with_block
+    block = Cocoa::Block.new(CFunc::Int, [CFunc::Int]) { |i|
+      i.value + 1
+    }
+    @test2 = Cocoa::MobiCocoaTest2._alloc._init
+    result = @test2._testBlocks1 block
+    eq 12, result.value
+  end
+
+  def test_20_call_with_block2
+    block = Cocoa::Block.new(CFunc::Int, [CFunc::Int]) { |i|
+      i.value + 1
+    }
+    @test2 = Cocoa::MobiCocoaTest2._alloc._init
+    result = @test2._testBlocks2 block
+    eq 12, result.value
+  end
+
+end
+#MobiBlocksTest1.run
+
 

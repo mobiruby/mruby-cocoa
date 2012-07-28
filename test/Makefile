@@ -11,6 +11,7 @@ LIBR := $(BASEDIR)/../lib/libmruby-cocoa.a
 EXCEPT1 := $(MRBCSRC)
 
 OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
+OBJ2 := $(patsubst %.m,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.m)))
 OBJMRB := $(patsubst %.c,%.o,$(MRBCSRC))
 OBJS := $(OBJ1) $(OBJ2) $(OBJ3)
 
@@ -77,7 +78,10 @@ $(OBJMRB) : %.o : %.rb
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).c -o $@
 
 # objects compiled from source
-$(OBJS) : %.o : %.c
+$(OBJ1) : %.o : %.c
+	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
+
+$(OBJ2) : %.o : %.m
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
 
 # clean up

@@ -40,17 +40,11 @@ class Cocoa::Object
             end
         end
 
-        internal_method_name = "__"+names.join('_')
+        internal_method_name = "_mruby_cocoa_"+names.join('_')
         define_method(internal_method_name, &block)
 
         closure = CFunc::Closure.new(rettype_rb, [CFunc::Pointer, CFunc::Pointer] + types) do |*a|
-            p ">internal"
-            obj = self.new(a[0])
-            p obj
-            p obj.class
-            
-            obj.send(internal_method_name, *a[2, a.length-2])
-            p "<internal"
+            self.new(a[0]).send(internal_method_name, *a[2, a.length-2])
         end
         $closure << closure
         
@@ -73,6 +67,7 @@ class Cocoa::Object
                 pos += 2
             end
             values += args[pos, args.length - pos]
+
             return obj.objc_msgSend(method_name, *values)
         end
     end
@@ -81,7 +76,6 @@ class Cocoa::Object
         if '_' == name.to_s[0, 1]
             return call_cocoa_method(self, name.to_s[1..-1], *args, &block)
         else
-            p self
             raise "Unknow method #{name}"
         end
     end
@@ -90,7 +84,6 @@ class Cocoa::Object
         if '_' == name.to_s[0, 1]
             return self.class.call_cocoa_method(self, name.to_s[1..-1], *args, &block)
         else
-            p self
             raise "Unknow method #{name}"
         end
     end
@@ -99,8 +92,8 @@ end
 
 module Cocoa
     def self.const_missing(name)
-        if exists_cocoa_class?(name)
-            return load_cocoa_class(name)
+        if Object.exists_cocoa_class?(name)
+            return Object.load_cocoa_class(name)
         end
         raise "uninitialized constant #{name}" # ToDo: NameError
     end
@@ -114,8 +107,8 @@ class Cocoa::Block
             block_.call(*args)
         end
     end
-
 end
+
 
 class CFunc::Void
     def self.objc_type_encode; 'v'; end
@@ -155,6 +148,14 @@ end
 
 class CFunc::UInt64
     def self.objc_type_encode; 'L'; end
+end
+
+class CFunc::SInt128
+    def self.objc_type_encode; 'q'; end
+end
+
+class CFunc::UInt128
+    def self.objc_type_encode; 'Q'; end
 end
 
 class CFunc::Float

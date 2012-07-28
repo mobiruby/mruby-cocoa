@@ -45,8 +45,6 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 {
     MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
     if(assoc && assoc.active) {
-        NSLog(@"asc=%p, %p, %@", assoc, pointer, pointer);
-        NSLog(@"asc obj=%p", assoc.mrb_obj.value.p);
         return assoc.mrb_obj;
     }
 
@@ -62,17 +60,13 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
     const char *class_name = object_getClassName(pointer);
     struct RClass *klass;
 
-    puts(class_name);
-    if (mrb_const_defined_at(mrb, mrb->object_class, mrb_intern(mrb, class_name))) {
-        klass = mrb_class_get(mrb, class_name);
-puts("orig");
-mrb_p(mrb, mrb_obj_value(klass));
+    mrb_sym class_name_sym = mrb_intern(mrb, class_name);
+    if (mrb_const_defined_at(mrb, cocoa_state(mrb)->namespace, class_name_sym)) {
+        klass = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), class_name_sym));
     }
     else {
         klass = cocoa_state(mrb)->object_class;
-puts("base");
     }
-    
 
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, klass, &cocoa_object_data_type, data));
 
@@ -83,8 +77,7 @@ puts("base");
     }
     assoc.active = YES;
     assoc.mrb_obj = self;
-    NSLog(@"new with id(%p)=%p, %@", self.value.p, pointer, pointer);
-    
+        
     return self;
 }
 
@@ -104,13 +97,9 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
         noretain = mrb_nil_value();
     }
     id pointer = cfunc_pointer_ptr(pointer_mrb);
-    NSLog(@"new=%@", pointer);
 
     MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
     if(assoc && assoc.active) {
-        NSLog(@"new asc=%p, %p, %@", assoc, pointer, pointer);
-        NSLog(@"new asc obj=%p", assoc.mrb_obj.value.p);
-        mrb_p(mrb, assoc.mrb_obj);
         return assoc.mrb_obj;
     }
     
@@ -123,7 +112,7 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
     [pointer retain];
         
-    //たぶんこのへん
+    //todo:たぶんこのへん
     const char *class_name = object_getClassName(pointer);
     struct RClass *klass2;
     if (mrb_const_defined(mrb, mrb_obj_value(mrb->object_class), mrb_intern(mrb, class_name))) {
@@ -142,7 +131,6 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     }
     assoc.active = YES;
     assoc.mrb_obj = self;
-    NSLog(@"new(%p)=%p, %@", self.value.p, pointer, pointer);
     
     return self;
 
@@ -169,12 +157,9 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 
     id *obj = cfunc_pointer_ptr(pointer);
     data->value._pointer = obj;
-    NSLog(@"cocoa_object_class_refer=%p, %@", *obj, *obj);
 
     MrbObjectMap *assoc = objc_getAssociatedObject(*obj, cocoa_state(mrb)->object_association_key);
     if(assoc && assoc.active) {
-        NSLog(@"refer asc=%p, %@, %p", assoc, *obj, *obj);
-        mrb_p(mrb, assoc.mrb_obj);
         return assoc.mrb_obj;
     }
 
@@ -188,8 +173,9 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 
     const char *class_name = object_getClassName(*obj);
     struct RClass *klass2;
-    if (mrb_const_defined(mrb, mrb_obj_value(mrb->object_class), mrb_intern(mrb, class_name))) {
-        klass2 = mrb_class_get(mrb, class_name);
+    mrb_sym class_name_sym = mrb_intern(mrb, class_name);
+    if (mrb_const_defined_at(mrb, cocoa_state(mrb)->namespace, class_name_sym)) {
+        klass2 = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), class_name_sym));
     }
     else {
         klass2 = cocoa_state(mrb)->object_class;
@@ -205,7 +191,6 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     }
     assoc.active = YES;
     assoc.mrb_obj = self;
-     NSLog(@"refer new %p=%p, %@, %p", self.value.p, assoc, *obj, *obj);
 
     return self;
 }
@@ -215,9 +200,13 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
  * internal method
  */
 static Class
-mruby_class_to_objc_class(mrb_state *mrb, mrb_value klass)
+mruby_class_to_objc_class(mrb_state *mrb, struct RClass *klass)
 {
-    const char *class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(klass));
+    const char *class_name = mrb_class_name(mrb, klass);
+    if(strncmp(class_name, "Cocoa::", 7)==0) {
+        //mrb_raise(mrb, E_NAME_ERROR, "%s is not cocoa class", class_name);
+        class_name += 7;
+    }
     return NSClassFromString([NSString stringWithCString: class_name encoding:NSUTF8StringEncoding]);
 }
 
@@ -266,8 +255,7 @@ cocoa_object_class_objc_addMethod(mrb_state *mrb, mrb_value klass)
     char *method_name = mrb_string_value_ptr(mrb, rb_method_name);
     SEL sel = sel_registerName(method_name);
     
-    const char *class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(klass));
-    Class objc_klass = NSClassFromString([NSString stringWithCString: class_name encoding:NSUTF8StringEncoding]);
+    Class objc_klass = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
 
     void *closure = cfunc_closure_data_pointer(mrb, rb_proc);
     class_addMethod(objc_klass, sel, closure, params);
@@ -294,10 +282,10 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     ffi_type **arg_types = NULL;
 
     int margc, i;
-    mrb_value rbfunc_name, *margs;
-    mrb_get_args(mrb, "o*", &rbfunc_name, &margs, &margc);
+    mrb_value method_name_mrb, *margs;
+    mrb_get_args(mrb, "o*", &method_name_mrb, &margs, &margc);
 
-    char *method_name = mrb_string_value_ptr(mrb, rbfunc_name);
+    char *method_name = mrb_string_value_ptr(mrb, method_name_mrb);
     SEL sel = NSSelectorFromString([NSString stringWithCString: method_name encoding:NSUTF8StringEncoding]);
 
     int cocoa_argc = margc + SELF_AND_SEL;
@@ -343,7 +331,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     *((void***)values)[1] = sel;
     
     mrb_sym sym_to_pointer = mrb_intern(mrb, "to_pointer");
-    for(i = 2/*self, sel*/; i < cocoa_argc; ++i) {
+    for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
         if(mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
             values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_pointer", 0));
         }
@@ -401,7 +389,7 @@ error_exit:
 static mrb_value
 cocoa_object_class_objc_msgSend(mrb_state *mrb, mrb_value klass)
 {
-    Class objc_klass = mruby_class_to_objc_class(mrb, klass);
+    Class objc_klass = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
     mrb_value obj = cocoa_object_new_with_id(mrb, objc_klass);
     
     return cocoa_object_objc_msgSend(mrb, obj);
@@ -419,13 +407,15 @@ cocoa_object_class_inherited(mrb_state *mrb, mrb_value klass)
     mrb_value subclass;
     mrb_get_args(mrb, "o", &subclass);
 
-    const char *class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(subclass));
-    Class objc_klass = NSClassFromString([NSString stringWithCString: class_name encoding:NSUTF8StringEncoding]);
-printf("new class=%s\n", class_name);
+    Class objc_klass = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(subclass));
 
     if(!objc_klass) {
-        const char *super_class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(klass));
-        Class super_class = NSClassFromString([NSString stringWithCString: super_class_name encoding:NSUTF8StringEncoding]);
+        const char *class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(subclass));
+        if(strncmp(class_name, "Cocoa::", 7)!=0) { // todo
+            mrb_raise(mrb, E_NAME_ERROR, "%s should define under Cocoa module", class_name);
+        }
+        class_name += 7; // todo
+        Class super_class = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
         Class new_class = objc_allocateClassPair(super_class, class_name, 0);
         objc_registerClassPair(new_class);
     }
@@ -468,11 +458,8 @@ cocoa_object_destructor(mrb_state *mrb, void *p)
 {
     struct cocoa_object_data *data = p;
 
-    // NSLog(@"dealloc=%p", data);
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
     MrbObjectMap *assoc = objc_getAssociatedObject(obj, cocoa_state(data->mrb)->object_association_key);
-    // NSLog(@"dealloc obj/assoc=(%@,%p),%p", obj,obj,assoc);
-    // NSLog(@"dealloc mrb=%p", assoc.mrb_obj.value.p);
     assoc.active = NO;
 
     if(data->autorelease) {
@@ -487,6 +474,7 @@ cocoa_class_exists_cocoa_class(mrb_state *mrb, mrb_value klass)
     mrb_value class_name_mrb;
     mrb_get_args(mrb, "o", &class_name_mrb);
     const char *class_name = mrb_sym2name(mrb, mrb_symbol(class_name_mrb));
+
     if(NSClassFromString([NSString stringWithCString:class_name encoding:NSUTF8StringEncoding])) {
         return mrb_true_value();
     }
@@ -508,7 +496,7 @@ cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
     }
     
     struct RClass *object_class = cocoa_state(mrb)->object_class;
-    return mrb_obj_value(mrb_define_class_id(mrb, mrb_symbol(class_name_mrb), object_class));
+    return mrb_obj_value(mrb_define_class_under(mrb, cocoa_state(mrb)->namespace, class_name, object_class));
 }
 
 /*

@@ -70,12 +70,13 @@ tmp/mruby-cfunc:
 	cd tmp && git clone https://github.com/MobiRuby/mruby-cfunc.git
 
 vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/libmruby.a
-	cd tmp/mruby-cfunc/src && make MRBC=$(BASEDIR)/vendors/bin/mrbc \
-		TARGET=$(BASEDIR)/vendors/lib/libmruby-cfunc.a \
-		MRUBY_CFLAGS=-I$(BASEDIR)/vendors/include \
-		MRUBY_LIBS=-L$(BASEDIR)/vendors/lib -lmruby \
-		LIBFFI_CFLAGS=$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags) \
-		LIBFFI_LIBS=$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)
+	cd tmp/mruby-cfunc/src && make MRBC="$(BASEDIR)/vendors/bin/mrbc" \
+		CFLAGS="$(CFLAGS)" \
+		TARGET="$(BASEDIR)/vendors/lib/libmruby-cfunc.a" \
+		MRUBY_CFLAGS="$(MRUBY_CFLAGS)" \
+		MRUBY_LIBS="$(MRUBY_LIBS)" \
+		LIBFFI_CFLAGS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags)" \
+		LIBFFI_LIBS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)"
 	cp tmp/mruby-cfunc/include/* vendors/include
 
 
