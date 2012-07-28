@@ -34,7 +34,7 @@ struct cocoa_state {
     struct RClass *namespace;
 };
 
-void init_cfunc_module(mrb_state *mrb);
+void init_cocoa_module(mrb_state *mrb);
 
 /* offset of cocoa_state in mrb->ud */
 extern size_t cocoa_state_offset;

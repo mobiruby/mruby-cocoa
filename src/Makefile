@@ -5,8 +5,8 @@
 # extension of the executable-file is modifiable(.exe .out ...)
 BASEDIR = .
 TARGET := $(BASEDIR)/../lib/libmruby-cocoa.a
-
 MRBCSRC := $(patsubst %.rb,%.c,$(wildcard $(BASEDIR)/mrb/*.rb))
+
 EXCEPT1 := $(MRBCSRC)
 
 OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
@@ -18,6 +18,7 @@ MRBC := $(BASEDIR)/../vendors/bin/mrbc
 
 # libraries, includes
 INCLUDES = 
+
 
 # libffi
 LIBFFI_CFLAGS = $(shell pkg-config libffi --cflags)
@@ -36,7 +37,7 @@ else ifeq ($(COMPILE_MODE),small)
   CFLAGS = -Os
 endif
 
-ALL_CFLAGS = -Wall -Werror-implicit-function-declaration -std=c99 $(CFLAGS) $(MRUBY_CFLAGS) $(LIBFFI_CFLAGS)
+ALL_CFLAGS = -Wall -Werror-implicit-function-declaration -std=c99 $(CFLAGS) $(MRUBY_CFLAGS) $(LIBFFI_CFLAGS) $(CFUNC_CFLAGS)
 
 
 ##############################

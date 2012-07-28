@@ -19,20 +19,22 @@ else ifeq ($(COMPILE_MODE),small)
 endif
 
 BASEDIR = $(shell pwd)
-INCLUDES = -I$(BASEDIR)/include
+INCLUDES = -I$(BASEDIR)/include -I$(BASEDIR)/vendors/include
 
 MRUBY_CFLAGS = -I$(BASEDIR)/vendors/include
 MRUBY_LIBS = -L$(BASEDIR)/vendors/lib -lmruby
+
+CFUNC_CFLAGS = -I$(BASEDIR)/vendors/include
+CFUNC_LIBS = -L$(BASEDIR)/vendors/lib -lmruby-cfunc
 
 LIBFFI_CFLAGS = $(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags)
 LIBFFI_LIBS = $(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)
 
 ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(MRUBY_CFLAGS)
-ifeq ($(OS),Windows_NT)
-  MAKE_FLAGS = --no-print-directory CC=$(CC) LL=$(LL) CFLAGS='$(ALL_CFLAGS)' LIBFFI_CFLAGS='$(LIBFFI_CFLAGS)' LIBFFI_LIBS='$(LIBFFI_LIBS)' MRUBY_CFLAGS='$(MRUBY_CFLAGS)' MRUBY_LIBS='$(MRUBY_LIBS)'
-else
-  MAKE_FLAGS = --no-print-directory CC='$(CC)' LL='$(LL)' CFLAGS='$(ALL_CFLAGS)' LIBFFI_CFLAGS='$(LIBFFI_CFLAGS)' LIBFFI_LIBS='$(LIBFFI_LIBS)' MRUBY_CFLAGS='$(MRUBY_CFLAGS)' MRUBY_LIBS='$(MRUBY_LIBS)'
-endif
+MAKE_FLAGS = --no-print-directory CC='$(CC)' LL='$(LL)' CFLAGS='$(ALL_CFLAGS)' \
+	LIBFFI_CFLAGS='$(LIBFFI_CFLAGS)' LIBFFI_LIBS='$(LIBFFI_LIBS)' \
+	CFUNC_CFLAGS='$(CFUNC_CFLAGS)' CFUNC_LIBS='$(CFUNC_LIBS)' \
+	MRUBY_CFLAGS='$(MRUBY_CFLAGS)' MRUBY_LIBS='$(MRUBY_LIBS)'
 
 ##############################
 # internal variables
@@ -45,14 +47,14 @@ export CAT := cat
 ##############################
 # generic build targets, rules
 
-.PHONY : all
-all : vendors/lib/libffi.a vendors/lib/libmruby.a
-	@$(MAKE) -C src $(MAKE_FLAGS)
-
 # mruby test
 .PHONY : test
 test : all
 	@$(MAKE) -C test $(MAKE_FLAGS) run
+
+.PHONY : all
+all : vendors/lib/libffi.a vendors/lib/libmruby.a vendors/lib/libmruby-cfunc.a
+	@$(MAKE) -C src $(MAKE_FLAGS)
 
 # clean up
 .PHONY : clean
@@ -74,7 +76,7 @@ vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/l
 		MRUBY_LIBS=-L$(BASEDIR)/vendors/lib -lmruby \
 		LIBFFI_CFLAGS=$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags) \
 		LIBFFI_LIBS=$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)
-	cp tmp/mruby-cfunc/include vendors/include
+	cp tmp/mruby-cfunc/include/* vendors/include
 
 
 ##################
