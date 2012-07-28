@@ -3,7 +3,7 @@
 
 # project-specific macros
 # extension of the executable-file is modifiable(.exe .out ...)
-BASEDIR = .
+BASEDIR = $(shell pwd)
 TARGET := $(BASEDIR)/../lib/libmruby-cocoa.a
 MRBCSRC := $(patsubst %.rb,%.c,$(wildcard $(BASEDIR)/mrb/*.rb))
 
@@ -66,11 +66,11 @@ $(OBJMRB) : %.o : %.rb
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).c -o $@
 
 # objects compiled from source
-$(OBJS1) : %.o : %.c
+$(OBJ1) : %.o : %.c
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
 
 # objects compiled from source
-$(OBJS2) : %.o : %.m
+$(OBJ2) : %.o : %.m
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
 
 # clean up
@@ -80,3 +80,4 @@ clean :
 	-$(RM_F) $(TARGET) $(OBJS) $(OBJMRB) $(MRB)
 	-$(RM_F) $(OBJS:.o=.d) $(OBJY:.o=.d)
 	-$(RM_F) $(patsubst %.c,%.o,$(EXCEPT1)) $(patsubst %.c,%.d,$(EXCEPT1))
+	-$(RM_F) $(patsubst %.m,%.o,$(EXCEPT1)) $(patsubst %.m,%.d,$(EXCEPT1))

@@ -1,5 +1,5 @@
 /*
-** cfunc-mruby - Interface to C functions on mruby
+** mruby-cocoa - Interface to Cocoa on mruby
 **
 ** Copyright (c) MobiRuby developers 2012-
 **
@@ -29,9 +29,14 @@
 #define mruby_cocoa_h
 
 #include "mruby.h"
+#include "cfunc.h"
 
 struct cocoa_state {
     struct RClass *namespace;
+
+    struct RClass *object_class;
+    struct RClass *block_class;
+    void *object_association_key;
 };
 
 void init_cocoa_module(mrb_state *mrb);
