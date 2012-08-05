@@ -1,4 +1,5 @@
-$keeper = []
+$mobiruby_obj_holder = []
+
 $closure = []
 
 class Cocoa::Object
@@ -92,8 +93,8 @@ end
 
 module Cocoa
     def self.const_missing(name)
-        if Object.exists_cocoa_class?(name)
-            return Object.load_cocoa_class(name)
+        if ::Cocoa::Object.exists_cocoa_class?(name)
+            return ::Cocoa::Object.load_cocoa_class(name)
         end
         raise "uninitialized constant #{name}" # ToDo: NameError
     end

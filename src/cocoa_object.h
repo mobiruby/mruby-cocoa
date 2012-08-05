@@ -21,13 +21,4 @@ struct cocoa_object_data {
 
 void init_cocoa_object(mrb_state *mrb, struct RClass* module);
 
-
-@interface MrbObjectMap : NSObject {
-    mrb_value mrb_obj;
-    bool active;
-}
-@property (nonatomic, assign) mrb_value mrb_obj;
-@property (nonatomic, assign) bool active;
-@end
-
 #endif

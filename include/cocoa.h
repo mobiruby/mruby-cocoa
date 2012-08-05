@@ -36,10 +36,19 @@ struct cocoa_state {
 
     struct RClass *object_class;
     struct RClass *block_class;
+    
     void *object_association_key;
+
+    mrb_sym sym_obj_holder;
+    mrb_sym sym_delete;
 };
 
+
+extern mrb_state **cocoa_mrb_states;
+extern int cocoa_vm_count;
+
 void init_cocoa_module(mrb_state *mrb);
+void close_cocoa_module(mrb_state *mrb);
 
 /* offset of cocoa_state in mrb->ud */
 extern size_t cocoa_state_offset;
