@@ -122,10 +122,12 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                 name[size] = '\0';
                 if (mrb_const_defined(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name))) {
                     mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name));
+                    free(name);
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
                 else {
                     // TODO 無名構造体を返す方法を考える
+                    free(name);
                     return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->struct_class, pointer_count);
                 }
 
