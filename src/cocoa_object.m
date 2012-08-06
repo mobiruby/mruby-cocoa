@@ -340,8 +340,8 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     
     values[1] = malloc(sizeof(void*));
     *((void***)values)[1] = sel;
-  // NSLog(@"arg[%d]=%@",0, *((void***)values)[0]);
-    //NSLog(@"arg[%d]=%s",1,method_name);
+    // NSLog(@"arg[%d]=%@",0, *((void***)values)[0]);
+    // NSLog(@"arg[%d]=%s",1,method_name);
     
     mrb_sym sym_to_pointer = mrb_intern(mrb, "to_pointer");
     for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {

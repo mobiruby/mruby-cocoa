@@ -118,7 +118,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     ++size;
                 }
                 char *name = malloc(size + 1);
-                strncpy(name, name1, size);
+                memcpy(name, name1, size);
                 name[size] = '\0';
                 if (mrb_const_defined(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name))) {
                     mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name));

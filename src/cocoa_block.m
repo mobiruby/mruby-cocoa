@@ -50,7 +50,7 @@ objc_block_descriptor = {
 static mrb_value
 cocoa_block_to_pointer(mrb_state *mrb, mrb_value self)
 {
-    struct objc_block_literal **bl = malloc(sizeof(void*));
+    struct objc_block_literal **bl = malloc(sizeof(struct objc_block_literal *));
     *bl = malloc(sizeof(struct objc_block_literal));
     (*bl)->isa = &_NSConcreteGlobalBlock;
     (*bl)->flags = 0;
