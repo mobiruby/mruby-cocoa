@@ -16,7 +16,7 @@
 
 
 @implementation MrbObjectMap
-@synthesize mrb_obj, active;
+@synthesize mrb_obj;
 @end
 
 static
@@ -49,7 +49,7 @@ id release_mobiruby(id self, SEL _cmd, ...)
         for(int i = 0; i < cocoa_vm_count; ++i) {
             mrb_state *mrb = cocoa_mrb_states[i];
             MrbObjectMap *assoc = objc_getAssociatedObject(self, cocoa_state(mrb)->object_association_key);
-            if(assoc && assoc.active) {
+            if(assoc) {
                 mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
                 mrb_value mrb_obj = assoc.mrb_obj;
                 mrb_funcall_argv(mrb, keeper, cocoa_state(mrb)->sym_delete, 1, &mrb_obj);

@@ -12,10 +12,8 @@
 
 @interface MrbObjectMap : NSObject {
     mrb_value mrb_obj;
-    bool active;
 }
 @property (nonatomic, assign) mrb_value mrb_obj;
-@property (nonatomic, assign) bool active;
 @end
 
 void init_objc_hook();
