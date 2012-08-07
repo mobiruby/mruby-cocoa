@@ -87,10 +87,8 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 static mrb_value
 cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
 {
-    mrb_value pointer_mrb, noretain;
-    if(mrb_get_args(mrb, "o|o", &pointer_mrb, &noretain) == 1) {
-        noretain = mrb_nil_value();
-    }
+    mrb_value pointer_mrb;
+    mrb_get_args(mrb, "o", &pointer_mrb);
     id pointer = cfunc_pointer_ptr(pointer_mrb);
 
     MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
@@ -107,7 +105,7 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
     [pointer retain];
         
-    //todo:たぶんこのへん
+    //todo: should verify class
     const char *class_name = object_getClassName(pointer);
     struct RClass *klass2;
     if (mrb_const_defined(mrb, mrb_obj_value(mrb->object_class), mrb_intern(mrb, class_name))) {
@@ -159,12 +157,12 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     if(assoc) {
         return assoc.mrb_obj;
     }
-    
+
     if(!mrb_test(noretain)) {
         [*obj retain];
     }
     data->autorelease = true;
-    
+
     const char *class_name = object_getClassName(*obj);
     struct RClass *klass2;
     mrb_sym class_name_sym = mrb_intern(mrb, class_name);
@@ -346,6 +344,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 
     ffi_cif cif;
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, cocoa_argc, result_ffi_type, arg_types) == FFI_OK) {
+        // todo: should handling exception
         ffi_call(&cif, fp, result_ptr, values);
         mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
         if(strcmp("alloc", method_name) == 0) {

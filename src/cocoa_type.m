@@ -126,7 +126,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
                 else {
-                    // TODO 無名構造体を返す方法を考える
+                    // TODO: should support anonymous struct
                     free(name);
                     return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->struct_class, pointer_count);
                 }
@@ -135,6 +135,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
             break;
 
         case '(': // union (name=...)
+            // should support (but libffi doesn't support union yet)
             break;
 
         case 'r': case 'n': case 'N':
