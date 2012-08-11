@@ -62,9 +62,14 @@ class MobiCocoaTest1Test < TestCase
     result = @test1[:prop2]
     eq "PROP2_", result._UTF8String.to_s
   end
+
+  def test_90_struct_get
+    result = @test1[:struct1]
+    eq 100, result[:i]
+  end
+
 end
 MobiCocoaTest1Test.run
-
 
 class MobiCocoaTest2Test < TestCase
   
@@ -76,7 +81,7 @@ class MobiCocoaTest2Test < TestCase
 
   def _test_20_call_rubymethod2
     test2 = Cocoa::MobiCocoaTest2._alloc._init
-    eq 9, test2._ruby_method2(3).value
+    # todo:
   end
 
 end

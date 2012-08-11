@@ -9,10 +9,12 @@
 #import "cocoa_type.h"
 
 #include "cfunc_type.h"
+#include "cocoa_bridgesupport.h"
 
 #include "mruby/string.h"
 #include "mruby/class.h"
 #include "mruby/proc.h"
+#include "mruby/array.h"
 #include "mruby/variable.h"
 
 #include "ffi.h"
@@ -22,7 +24,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
-
 
 /* 
     Convert Objective-C type encodings to ffi_type
@@ -126,7 +127,48 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
                 else {
+                    const char* def = cocoa_bridgesupport_struct_lookup(mrb, name);
+                    if(def) {
+                        mrb_value elements = mrb_ary_new(mrb);
+                        mrb_value klass = mrb_obj_value(mrb_define_class(mrb, name, cfunc_state(mrb)->struct_class));
+
+                        char *defstr = malloc(strlen(def) + 1);
+                        strcpy(defstr, def);
+
+                        char *token = defstr;
+                        char *nexttoken = NULL;
+                        int eos = 0;
+
+                        while(!eos) {
+                            nexttoken = strstr(token, ":");
+                            *(nexttoken++) = '\0';
+                            mrb_value name = mrb_str_new_cstr(mrb, token);
+                            token = nexttoken;
+
+                            nexttoken = strstr(token, ":");
+                            if(nexttoken) {
+                                *(nexttoken++) = '\0';
+                            }
+                            else {
+                                eos = 1;
+                            }
+                            mrb_value type = objc_type_to_cfunc_type(mrb, token);
+                            token = nexttoken;
+
+                            mrb_ary_push(mrb, elements, type);
+                            mrb_ary_push(mrb, elements, name);
+                        }
+
+                        mrb_funcall(mrb, klass, "define", 1, elements);
+
+                        free(defstr);
+                        free(name);
+
+                        return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
+                    }
+
                     // TODO: should support anonymous struct
+                    // generate struct from type encode {id*@^i} 
                     free(name);
                     return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->struct_class, pointer_count);
                 }

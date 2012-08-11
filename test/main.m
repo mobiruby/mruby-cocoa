@@ -39,17 +39,36 @@ int main(int argc, char *argv[])
     }
 }
 
-
+struct MobiCocoaStruct1 {
+    int i;
+    double d;
+    const char* str;
+    id obj;
+    int *iptr;
+};
 
 @interface MobiCocoaTest1 : NSObject {
     NSString *prop2;
+    struct MobiCocoaStruct1 struct1;
 }
 @property(retain,getter=prop1_,readonly) NSString *prop1;
 @property(retain) NSString *prop2;
+@property(assign) struct MobiCocoaStruct1 struct1;
 @end
 
 
 @implementation MobiCocoaTest1
+
+- (struct MobiCocoaStruct1)struct1
+{
+    struct1.i = 100;
+    return struct1;
+}
+
+- (void)setStruct1:(struct MobiCocoaStruct1)str
+{
+    struct1 = str;
+}
 
 - (NSString*)prop1_
 {
@@ -81,6 +100,7 @@ int main(int argc, char *argv[])
 {
     return [NSString stringWithFormat: @"value=%d", value];
 }
+
 - (NSString*)uint16ToString:(unsigned short)value
 {
     return [NSString stringWithFormat: @"value=%hu", value];

@@ -66,7 +66,7 @@ clean :
 ##################
 # libmruby-cfunc.a
 tmp/mruby-cfunc:
-	mkdir -p tmp/libffi
+	mkdir -p tmp
 	cd tmp && git clone https://github.com/MobiRuby/mruby-cfunc.git
 
 vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/libmruby.a
@@ -83,7 +83,7 @@ vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/l
 ##################
 # libffi.a
 tmp/libffi:
-	mkdir -p tmp/libffi
+	mkdir -p tmp
 	cd tmp && git clone https://github.com/atgreen/libffi.git
 
 vendors/lib/libffi.a: tmp/libffi

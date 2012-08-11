@@ -339,12 +339,15 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     free(result_cocoa_type);
 
     ffi_type *result_ffi_type = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(result_type_class))->ffi_type_value;
-    
     void *result_ptr = malloc(result_ffi_type->size);
+    if(result_ffi_type->type == FFI_TYPE_STRUCT) {
+        int size = mrb_fixnum(mrb_funcall(mrb, result_type_class, "size", 0));
+        result_ptr = malloc(size);
+    }
 
     ffi_cif cif;
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, cocoa_argc, result_ffi_type, arg_types) == FFI_OK) {
-        // todo: should handling exception
+        // todo: should handling objective-c exception
         ffi_call(&cif, fp, result_ptr, values);
         mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
         if(strcmp("alloc", method_name) == 0) {
@@ -356,7 +359,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     }
     else {
         free(result_ptr);
-        cfunc_mrb_raise_without_jump(mrb, E_NAME_ERROR, "can't find method");
+        cfunc_mrb_raise_without_jump(mrb, E_NAME_ERROR, "can't find method %s", method_name);
         goto error_exit;
     }
     

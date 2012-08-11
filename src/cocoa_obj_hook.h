@@ -8,7 +8,7 @@
 
 #include "mruby.h"
 #include <stdbool.h>
-
+#import <Foundation/Foundation.h>
 
 @interface MrbObjectMap : NSObject {
     mrb_value mrb_obj;
