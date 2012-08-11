@@ -119,3 +119,12 @@ class MobiBlocksTest1 < TestCase
 end
 MobiBlocksTest1.run
 
+
+class ConstTest1 < TestCase
+
+  def test_10_const_f
+    eq 3061152000, Cocoa::Const::kCFAbsoluteTimeIntervalSince1904.to_f
+  end
+
+end
+ConstTest1.run
