@@ -19,38 +19,24 @@
 #import <objc/message.h>
 #import <objc/runtime.h>
 
-struct StructTable
+void
+load_cocoa_bridgesupport(mrb_state *mrb,
+    struct BridgeSupportStructTable *struct_table,
+    struct BridgeSupportConstTable *const_table)
 {
-    const char *name;
-    const char *definition;
+    cocoa_state(mrb)->struct_table = struct_table;
+    cocoa_state(mrb)->const_table = const_table;
 }
-struct_table[] = {
-    {.name = "CGPoint", .definition = "x:f:y:f"},
-    {.name = "CGSize", .definition = "width:f:height:f"},
-    {.name = "CGRect", .definition = "origin:{CGPoint}:size:{CGSize}"},
-    {.name = "MobiCocoaStruct1", .definition = "i:i:d:d:str:*:obj:@:iptr:^i"},
-    {.name = "MobiCocoaStruct2", .definition = "i1:i:i2:i"},
-    {.name = NULL, .definition = NULL}
-};
 
 
-struct ConstTable
+const char*
+cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
 {
-    const char *name;
-    const char *type;
-    void *value;
-}
-const_table[] = {
-    {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
-    {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
-    {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
-    {.name = NULL, .type = NULL, .value = NULL}
-};
+    if(cocoa_state(mrb)->struct_table == NULL) {
+        return NULL;
+    }
 
-
-const char* cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
-{
-    struct StructTable *cur = struct_table;
+    struct BridgeSupportStructTable *cur = cocoa_state(mrb)->struct_table;
     while(cur->name) {
         if(strcmp(name, cur->name)==0) {
             return cur->definition;
@@ -64,6 +50,10 @@ const char* cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
 mrb_value
 cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 {
+    if(cocoa_state(mrb)->const_table == NULL) {
+        return mrb_nil_value();
+    }
+
     mrb_value name;
     mrb_get_args(mrb, "o", &name);
     char *namestr = mrb_string_value_ptr(mrb, name);
@@ -87,11 +77,15 @@ cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
 {
+    if(cocoa_state(mrb)->const_table == NULL) {
+        return mrb_nil_value();
+    }
+
     mrb_value name;
     mrb_get_args(mrb, "o", &name);
     char *namestr = mrb_string_value_ptr(mrb, name);
 
-    struct ConstTable *cur = const_table;
+    struct BridgeSupportConstTable *cur = cocoa_state(mrb)->const_table;
     while(cur->name) {
         if(strcmp(namestr, cur->name)==0) {
             mrb_value type = objc_type_to_cfunc_type(mrb, cur->type);
@@ -118,4 +112,7 @@ init_cocoa_bridge_support(mrb_state *mrb)
     cocoa_state(mrb)->const_module = const_module;
     mrb_define_class_method(mrb, const_module, "const_missing", cocoa_const_const_missing, ARGS_REQ(1));
     mrb_define_class_method(mrb, const_module, "method_missing", cocoa_const_const_missing, ARGS_REQ(1));
+
+    cocoa_state(mrb)->const_table = NULL;
+    cocoa_state(mrb)->struct_table = NULL;
 }

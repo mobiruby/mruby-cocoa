@@ -31,6 +31,20 @@
 #include "mruby.h"
 #include "cfunc.h"
 
+
+struct BridgeSupportStructTable
+{
+    const char *name;
+    const char *definition;
+};
+
+struct BridgeSupportConstTable
+{
+    const char *name;
+    const char *type;
+    void *value;
+};
+
 struct cocoa_state {
     struct RClass *namespace;
 
@@ -39,6 +53,9 @@ struct cocoa_state {
 
     struct RClass *struct_module;
     struct RClass *const_module;
+
+    struct BridgeSupportStructTable *struct_table;
+    struct BridgeSupportConstTable *const_table;
     
     void *object_association_key;
 
@@ -52,6 +69,12 @@ extern int cocoa_vm_count;
 
 void init_cocoa_module(mrb_state *mrb);
 void close_cocoa_module(mrb_state *mrb);
+
+void
+load_cocoa_bridgesupport(mrb_state *mrb,
+    struct BridgeSupportStructTable *struct_table,
+    struct BridgeSupportConstTable *const_table);
+
 
 /* offset of cocoa_state in mrb->ud */
 extern size_t cocoa_state_offset;

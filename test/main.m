@@ -10,6 +10,24 @@ struct mrb_state_ud {
 };
 
 
+struct BridgeSupportStructTable struct_table[] = {
+    {.name = "CGPoint", .definition = "x:f:y:f"},
+    {.name = "CGSize", .definition = "width:f:height:f"},
+    {.name = "CGRect", .definition = "origin:{CGPoint}:size:{CGSize}"},
+    {.name = "MobiCocoaStruct1", .definition = "i:i:d:d:str:*:obj:@:iptr:^i"},
+    {.name = "MobiCocoaStruct2", .definition = "i1:i:i2:i"},
+    {.name = NULL, .definition = NULL}
+};
+
+
+struct BridgeSupportConstTable const_table[] = {
+    {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
+    {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
+    {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
+    {.name = NULL, .type = NULL, .value = NULL}
+};
+
+
 void
 init_unittest(mrb_state *mrb);
 
@@ -27,6 +45,7 @@ int main(int argc, char *argv[])
 
     cocoa_state_offset = cocoa_offsetof(struct mrb_state_ud, cocoa_state);
     init_cocoa_module(mrb);
+    load_cocoa_bridgesupport(mrb, struct_table, const_table);
 
     init_unittest(mrb);
     if (mrb->exc) {

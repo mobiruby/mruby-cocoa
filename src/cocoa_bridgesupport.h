@@ -12,7 +12,7 @@
 void
 init_cocoa_bridge_support(mrb_state *mrb);
 
-void cocoa_bridgesupport_load(mrb_state *mrb);
-const char* cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name);
+const char*
+cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name);
 
 #endif
