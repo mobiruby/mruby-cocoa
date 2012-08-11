@@ -130,7 +130,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     const char* def = cocoa_bridgesupport_struct_lookup(mrb, name);
                     if(def) {
                         mrb_value elements = mrb_ary_new(mrb);
-                        mrb_value klass = mrb_obj_value(mrb_define_class(mrb, name, cfunc_state(mrb)->struct_class));
+                        mrb_value klass = mrb_obj_value(mrb_define_class_under(mrb, cocoa_state(mrb)->struct_class, name, cfunc_state(mrb)->struct_class));
 
                         char *defstr = malloc(strlen(def) + 1);
                         strcpy(defstr, def);

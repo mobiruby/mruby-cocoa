@@ -87,6 +87,14 @@ class MobiCocoaTest2Test < TestCase
 end
 MobiCocoaTest2Test.run
 
+class MobiCocoaStruct2Test < TestCase
+  def test_10_load_bridgesupport
+    eq 8, ::Cocoa::Struct::MobiCocoaStruct2.size
+    eq 8, ::Cocoa::Struct::MobiCocoaStruct2.align
+  end
+end
+MobiCocoaStruct2Test.run
+
 
 class MobiBlocksTest1 < TestCase
 
@@ -109,6 +117,5 @@ class MobiBlocksTest1 < TestCase
   end
 
 end
-#MobiBlocksTest1.run
-
+MobiBlocksTest1.run
 

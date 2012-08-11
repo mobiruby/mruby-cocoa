@@ -8,6 +8,7 @@
 #include "cocoa_object.h"
 #include "cocoa_block.h"
 #include "cocoa_obj_hook.h"
+#include "cocoa_bridgesupport.h"
 
 #include "mruby.h"
 #include "mruby/class.h"
@@ -45,6 +46,8 @@ void init_cocoa_module(mrb_state *mrb)
     init_objc_hook();
     init_cocoa_object(mrb, ns);
     init_cocoa_block(mrb, ns);
+    init_cocoa_bridge_support(mrb);
+
     init_cocoa(mrb);
 }
 

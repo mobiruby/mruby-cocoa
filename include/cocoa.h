@@ -36,6 +36,7 @@ struct cocoa_state {
 
     struct RClass *object_class;
     struct RClass *block_class;
+    struct RClass *struct_class;
     
     void *object_association_key;
 

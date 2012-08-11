@@ -47,6 +47,10 @@ struct MobiCocoaStruct1 {
     int *iptr;
 };
 
+struct MobiCocoaStruct2 {
+    int i1, i2;
+};
+
 @interface MobiCocoaTest1 : NSObject {
     NSString *prop2;
     struct MobiCocoaStruct1 struct1;
