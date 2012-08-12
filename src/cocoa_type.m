@@ -122,8 +122,8 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                 char *name = malloc(size + 1);
                 memcpy(name, name1, size);
                 name[size] = '\0';
-                if (mrb_const_defined(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name))) {
-                    mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), mrb_intern(mrb, name));
+                if (mrb_const_defined(mrb, mrb_obj_value(cocoa_state(mrb)->struct_module), mrb_intern(mrb, name))) {
+                    mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->struct_module), mrb_intern(mrb, name));
                     free(name);
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
