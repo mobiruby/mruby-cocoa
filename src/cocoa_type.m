@@ -56,8 +56,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
 {
     int pointer_count = 0;
     const char *encode = objc_type;
-    puts(objc_type);
-    
+        
     while(*encode) {
         switch(*encode) {
         case_type('c', sint8_class);

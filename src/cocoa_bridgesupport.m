@@ -26,7 +26,6 @@ load_cocoa_bridgesupport(mrb_state *mrb,
     struct BridgeSupportConstTable *const_table,
     struct BridgeSupportEnumTable *enum_table)
 {
-    printf("Load=%p\n", const_table);
     cocoa_state(mrb)->struct_table = struct_table;
     cocoa_state(mrb)->const_table = const_table;
     cocoa_state(mrb)->enum_table = enum_table;
@@ -56,7 +55,6 @@ mrb_value
 cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 {
     if(cocoa_state(mrb)->const_table == NULL) {
-        printf("Unknown!?\n");
         return mrb_nil_value();
     }
 
@@ -71,6 +69,7 @@ cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
         strcat(type, namestr);
         strcat(type, "=}");
         mrb_value strct = objc_type_to_cfunc_type(mrb, type);
+        mrb_define_const(mrb, (struct RClass*)mrb_object(klass), namestr, strct);
         return strct;
     }
     else {
@@ -96,6 +95,7 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     while(ccur->name) {
         if(strcmp(namestr, ccur->name)==0) {
             mrb_value type = objc_type_to_cfunc_type(mrb, ccur->type);
+
             mrb_value ptr = cfunc_pointer_new_with_pointer(mrb, ccur->value, false);
             return mrb_funcall(mrb, type, "refer", 1, ptr);
         }
