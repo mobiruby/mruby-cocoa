@@ -9,7 +9,6 @@ struct mrb_state_ud {
     struct cocoa_state cocoa_state;
 };
 
-
 struct BridgeSupportStructTable struct_table[] = {
     {.name = "CGPoint", .definition = "x:f:y:f"},
     {.name = "CGSize", .definition = "width:f:height:f"},
@@ -19,14 +18,17 @@ struct BridgeSupportStructTable struct_table[] = {
     {.name = NULL, .definition = NULL}
 };
 
-
 struct BridgeSupportConstTable const_table[] = {
     {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
     {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
     {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
-    {.name = NULL, .type = NULL, .value = NULL}
+    {.name = NULL, .type=NULL, .value = NULL}
 };
 
+struct BridgeSupportEnumTable enum_table[] = {
+    {.name="enum1", .value=1},
+    {.name = NULL, .value = NULL}
+};
 
 void
 init_unittest(mrb_state *mrb);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
 
     cocoa_state_offset = cocoa_offsetof(struct mrb_state_ud, cocoa_state);
     init_cocoa_module(mrb);
-    load_cocoa_bridgesupport(mrb, struct_table, const_table);
+    load_cocoa_bridgesupport(mrb, struct_table, const_table, enum_table);
 
     init_unittest(mrb);
     if (mrb->exc) {

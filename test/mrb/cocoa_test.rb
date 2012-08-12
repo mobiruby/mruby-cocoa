@@ -126,5 +126,9 @@ class ConstTest1 < TestCase
     eq 3061152000, Cocoa::Const::kCFAbsoluteTimeIntervalSince1904.to_f
   end
 
+  def test_20_enum1
+    eq 1, Cocoa::Const::enum1
+  end
+
 end
 ConstTest1.run

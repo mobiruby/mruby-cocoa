@@ -56,6 +56,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
 {
     int pointer_count = 0;
     const char *encode = objc_type;
+    puts(objc_type);
     
     while(*encode) {
         switch(*encode) {
@@ -113,8 +114,9 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
             {
                 ++encode;
                 const char *name1 = encode;
+                
                 int size = 0;
-                while(*encode != '=') {
+                while(*encode != '=' && *encode != '}') {
                     ++encode;
                     ++size;
                 }

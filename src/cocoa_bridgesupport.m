@@ -1,8 +1,9 @@
 //
-//  BridgeSupport loader
+//  BridgeSupport support
 //
 //  See Copyright Notice in cocoa.h
 //
+
 
 #include "cocoa_bridgesupport.h"
 #include "cocoa_type.h"
@@ -22,13 +23,17 @@
 void
 load_cocoa_bridgesupport(mrb_state *mrb,
     struct BridgeSupportStructTable *struct_table,
-    struct BridgeSupportConstTable *const_table)
+    struct BridgeSupportConstTable *const_table,
+    struct BridgeSupportEnumTable *enum_table)
 {
+    printf("Load=%p\n", const_table);
     cocoa_state(mrb)->struct_table = struct_table;
     cocoa_state(mrb)->const_table = const_table;
+    cocoa_state(mrb)->enum_table = enum_table;
 }
 
 
+// Need to re-write to hash table
 const char*
 cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
 {
@@ -51,6 +56,7 @@ mrb_value
 cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 {
     if(cocoa_state(mrb)->const_table == NULL) {
+        printf("Unknown!?\n");
         return mrb_nil_value();
     }
 
@@ -69,6 +75,7 @@ cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
     }
     else {
         // todo: raise unknow struct exception
+        printf("Unknown %s\n", namestr);
         return mrb_nil_value();
     }
 }
@@ -85,15 +92,24 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     mrb_get_args(mrb, "o", &name);
     char *namestr = mrb_string_value_ptr(mrb, name);
 
-    struct BridgeSupportConstTable *cur = cocoa_state(mrb)->const_table;
-    while(cur->name) {
-        if(strcmp(namestr, cur->name)==0) {
-            mrb_value type = objc_type_to_cfunc_type(mrb, cur->type);
-            mrb_value ptr = cfunc_pointer_new_with_pointer(mrb, cur->value, false);
+    struct BridgeSupportConstTable *ccur = cocoa_state(mrb)->const_table;
+    while(ccur->name) {
+        if(strcmp(namestr, ccur->name)==0) {
+            mrb_value type = objc_type_to_cfunc_type(mrb, ccur->type);
+            mrb_value ptr = cfunc_pointer_new_with_pointer(mrb, ccur->value, false);
             return mrb_funcall(mrb, type, "refer", 1, ptr);
         }
-        ++cur;
+        ++ccur;
     }
+
+    struct BridgeSupportEnumTable *ecur = cocoa_state(mrb)->enum_table;
+    while(ecur->name) {
+        if(strcmp(namestr, ecur->name)==0) {
+            return mrb_fixnum_value(ecur->value);
+        }
+        ++ecur;
+    }
+
     return mrb_nil_value();
 }
 
