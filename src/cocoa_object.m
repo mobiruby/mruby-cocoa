@@ -151,6 +151,10 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     }
 
     id *obj = cfunc_pointer_ptr(pointer);
+    if(*obj == nil) {
+        return mrb_nil_value();
+    }
+
     data->value._pointer = obj;
 
     MrbObjectMap *assoc = objc_getAssociatedObject(*obj, cocoa_state(mrb)->object_association_key);
@@ -175,7 +179,7 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, klass2, &cocoa_object_data_type, data));
     mrb_obj_iv_set(mrb, (struct RObject*)mrb_object(self), mrb_intern(mrb, "parent_pointer"), pointer); // keep for GC
 
-    if(assoc == NULL) {
+    if(assoc == NULL && *obj) {
         assoc = [[MrbObjectMap alloc] init];
         objc_setAssociatedObject(*obj, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         [assoc release];
@@ -439,6 +443,9 @@ cocoa_object_class_objc_property_getAttributes(mrb_state *mrb, mrb_value self)
     Class objc_klass = [obj class];
     
     objc_property_t prop = class_getProperty(objc_klass, mrb_string_value_ptr(mrb, prop_name));
+    if(!prop) {
+        return mrb_nil_value();
+    }
     const char *attrs = property_getAttributes(prop);
     
     // T{YorkshireTeaStruct="pot"i"lady"c},VtypedefDefault
