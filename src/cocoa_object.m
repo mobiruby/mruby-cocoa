@@ -319,6 +319,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         arg_types[i] = mrb_value_to_mrb_ffi_type(mrb, margs[i - 2])->ffi_type_value;
     }
     
+    
     values = malloc(sizeof(void*) * cocoa_argc);
     
     values[0] = malloc(sizeof(void*));
@@ -328,13 +329,24 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     *((void***)values)[1] = sel;
     
     mrb_sym sym_to_pointer = mrb_intern(mrb, "to_pointer");
+    mrb_sym sym_to_cocoa = mrb_intern(mrb, "to_cocoa");
     for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
-        if(mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
+        int cocoa_obj = (mrb_object(arg_type_class[i]) == cocoa_state(mrb)->object_class);
+
+        if(cocoa_obj && mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_cocoa)) {
+            values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_cocoa", 0));
+        }
+        else if(mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
             values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_pointer", 0));
         }
         else {
             mrb_value mval = mrb_funcall(mrb, arg_type_class[i], "new", 1, margs[i - SELF_AND_SEL]);
-            values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, mval, "to_pointer", 0));
+            if (cocoa_obj) {
+                values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, mval, "to_cocoa", 0));
+            }
+            else {
+                values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, mval, "to_pointer", 0));
+            }
         }
     }
     

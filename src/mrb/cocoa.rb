@@ -88,6 +88,10 @@ class Cocoa::Object
             raise "Unknow method #{name}"
         end
     end
+
+    def to_cocoa
+        to_pointer
+    end
 end
 
 
@@ -108,8 +112,11 @@ class Cocoa::Block
             block_.call(*args)
         end
     end
-end
 
+    def to_cocoa
+        to_pointer
+    end
+end
 
 class CFunc::Void
     def self.objc_type_encode; 'v'; end
@@ -167,8 +174,15 @@ class CFunc::Dobule
     def self.objc_type_encode; 'd'; end
 end
 
-class ::String
+class String
     def self.objc_type_encode; '*'; end
+    def to_cocoa
+        Cocoa::NSString._stringWithUTF8String(self).to_pointer
+    end
+end
+
+class NilClass
+    def to_cocoa; to_pointer; end
 end
 
 class Cocoa::Object
