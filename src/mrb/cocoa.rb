@@ -92,6 +92,7 @@ class Cocoa::Object
     def to_cocoa
         to_pointer
     end
+
 end
 
 

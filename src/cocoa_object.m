@@ -331,12 +331,12 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     mrb_sym sym_to_pointer = mrb_intern(mrb, "to_pointer");
     mrb_sym sym_to_cocoa = mrb_intern(mrb, "to_cocoa");
     for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
-        int cocoa_obj = (mrb_object(arg_type_class[i]) == cocoa_state(mrb)->object_class);
-
+        int cocoa_obj = (mrb_object(arg_type_class[i]) == (struct RBasic*)cocoa_state(mrb)->object_class);
+        
         if(cocoa_obj && mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_cocoa)) {
             values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_cocoa", 0));
         }
-        else if(mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
+        else if(!cocoa_obj && mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
             values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_pointer", 0));
         }
         else {
@@ -500,6 +500,20 @@ cocoa_class_exists_cocoa_class(mrb_state *mrb, mrb_value klass)
 
 
 mrb_value
+cocoa_object_class_set(mrb_state *mrb, mrb_value klass)
+{
+    mrb_value pointer, val;
+    mrb_get_args(mrb, "oo", &pointer, &val);
+
+    struct mrb_ffi_type *mft = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(klass));
+    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_cocoa", 0));
+    *((id*)cfunc_pointer_ptr(pointer)) = *valp;
+
+    return val;
+}
+
+
+mrb_value
 cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
 {
     mrb_value class_name_mrb;
@@ -538,6 +552,7 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_msgSend", cocoa_object_class_objc_msgSend, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "new", cocoa_object_class_new, ARGS_REQ(1));
+    mrb_define_class_method(mrb, object_class, "set", cocoa_object_class_set, ARGS_REQ(2));
 
     mrb_define_class_method(mrb, object_class, "load_cocoa_class", cocoa_class_load_cocoa_class, ARGS_REQ(1));
     mrb_define_class_method(mrb, object_class, "exists_cocoa_class?", cocoa_class_exists_cocoa_class, ARGS_REQ(1));
