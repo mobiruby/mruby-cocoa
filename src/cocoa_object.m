@@ -164,8 +164,8 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 
     if(!mrb_test(noretain)) {
         [*obj retain];
+        data->autorelease = true;
     }
-    data->autorelease = true;
 
     const char *class_name = object_getClassName(*obj);
     struct RClass *klass2;
@@ -328,26 +328,15 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     values[1] = malloc(sizeof(void*));
     *((void***)values)[1] = sel;
     
-    mrb_sym sym_to_pointer = mrb_intern(mrb, "to_pointer");
-    mrb_sym sym_to_cocoa = mrb_intern(mrb, "to_cocoa");
+    mrb_sym sym_to_ffi_value= mrb_intern(mrb, "to_ffi_value");
     for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
-        int cocoa_obj = (mrb_object(arg_type_class[i]) == (struct RBasic*)cocoa_state(mrb)->object_class);
-        
-        if(cocoa_obj && mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_cocoa)) {
-            values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_cocoa", 0));
+        mrb_value marg = margs[i - SELF_AND_SEL];
+        if(!mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_ffi_value)) {
+            marg = mrb_funcall(mrb, arg_type_class[i], "new", 1, marg);
         }
-        else if(!cocoa_obj && mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_pointer)) {
-            values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, margs[i - SELF_AND_SEL], "to_pointer", 0));
-        }
-        else {
-            mrb_value mval = mrb_funcall(mrb, arg_type_class[i], "new", 1, margs[i - SELF_AND_SEL]);
-            if (cocoa_obj) {
-                values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, mval, "to_cocoa", 0));
-            }
-            else {
-                values[i] = cfunc_pointer_ptr(mrb_funcall(mrb, mval, "to_pointer", 0));
-            }
-        }
+        mrb_value args[1];
+        args[0] = arg_type_class[i];
+        values[i] = cfunc_pointer_ptr(mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args));
     }
     
     char *result_cocoa_type = method_copyReturnType(method);
@@ -473,7 +462,7 @@ static void
 cocoa_object_destructor(mrb_state *mrb, void *p)
 {
     struct cocoa_object_data *data = p;
-
+    
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
     MrbObjectMap *assoc = objc_getAssociatedObject(obj, cocoa_state(data->mrb)->object_association_key);
 
@@ -505,8 +494,7 @@ cocoa_object_class_set(mrb_state *mrb, mrb_value klass)
     mrb_value pointer, val;
     mrb_get_args(mrb, "oo", &pointer, &val);
 
-    struct mrb_ffi_type *mft = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(klass));
-    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_cocoa", 0));
+    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_ffi_value", 1, cocoa_state(mrb)->object_class));
     *((id*)cfunc_pointer_ptr(pointer)) = *valp;
 
     return val;
@@ -521,7 +509,7 @@ cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
     const char *class_name = mrb_sym2name(mrb, mrb_symbol(class_name_mrb));
     
     if(!NSClassFromString([NSString stringWithCString:class_name encoding:NSUTF8StringEncoding])) {
-       mrb_raise(mrb, E_NAME_ERROR, "can't load %s class from Cocoa", class_name);
+       mrb_raise(mrb, E_NAME_ERROR, "Can't load %s class from Cocoa", class_name);
     }
     
     struct RClass *object_class = cocoa_state(mrb)->object_class;

@@ -88,11 +88,6 @@ class Cocoa::Object
             raise "Unknow method #{name}"
         end
     end
-
-    def to_cocoa
-        to_pointer
-    end
-
 end
 
 
@@ -112,10 +107,6 @@ class Cocoa::Block
             args.shift
             block_.call(*args)
         end
-    end
-
-    def to_cocoa
-        to_pointer
     end
 end
 
@@ -177,13 +168,13 @@ end
 
 class String
     def self.objc_type_encode; '*'; end
-    def to_cocoa
-        Cocoa::NSString._stringWithUTF8String(self).to_pointer
+    def to_ffi_value(ffi_type)
+        if ffi_type == Cocoa::Object
+            Cocoa::NSString._stringWithUTF8String(self).to_pointer
+        else
+            self.to_pointer
+        end
     end
-end
-
-class NilClass
-    def to_cocoa; to_pointer; end
 end
 
 class Cocoa::Object
