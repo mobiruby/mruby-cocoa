@@ -21,11 +21,11 @@ class Cocoa::Object
     end
 
     def [](prop_name)
-        self.objc_msgSend(self.objc_property(prop_name)[:getter])
+        self.objc_msgSend(:self, self.objc_property(prop_name)[:getter])
     end
 
     def []=(prop_name, value)
-        self.objc_msgSend(self.objc_property(prop_name)[:setter], value)
+        self.objc_msgSend(:self, self.objc_property(prop_name)[:setter], value)
         value
     end
 
@@ -53,10 +53,10 @@ class Cocoa::Object
         objc_addMethod objc_name, closure, "#{rettype}:@#{types.map{|t|t.objc_type_encode}.join}"
     end
 
-    def self.call_cocoa_method(obj, name, *args, &block)
+    def self.call_cocoa_method(target, obj, name, *args, &block)
         method_name = name.to_s
         if args.length == 0
-            return obj.objc_msgSend(method_name)
+            return obj.objc_msgSend(target, method_name)
         else
             method_name += ':'
             values = [args[0]] 
@@ -69,13 +69,13 @@ class Cocoa::Object
             end
             values += args[pos, args.length - pos]
 
-            return obj.objc_msgSend(method_name, *values)
+            return obj.objc_msgSend(target, method_name, *values)
         end
     end
 
     def self.method_missing(name, *args, &block)
         if '_' == name.to_s[0, 1]
-            return call_cocoa_method(self, name.to_s[1..-1], *args, &block)
+            return call_cocoa_method(:self, self, name.to_s[1..-1], *args, &block)
         else
             raise "Unknow method #{name}"
         end
@@ -83,11 +83,28 @@ class Cocoa::Object
 
     def method_missing(name, *args, &block)
         if '_' == name.to_s[0, 1]
-            return self.class.call_cocoa_method(self, name.to_s[1..-1], *args, &block)
+            return self.class.call_cocoa_method(:self, self, name.to_s[1..-1], *args, &block)
         else
             raise "Unknow method #{name}"
         end
     end
+
+    def self._super(name, *args, &block)
+        if '_' == name.to_s[0, 1]
+            return call_cocoa_method(:super, self, name.to_s[1..-1], *args, &block)
+        else
+            raise "Unknow method #{name}"
+        end
+    end
+
+    def _super(name, *args, &block)
+        if '_' == name.to_s[0, 1]
+            return self.class.call_cocoa_method(:super, self, name.to_s[1..-1], *args, &block)
+        else
+            raise "Unknow method #{name}"
+        end
+    end
+
 end
 
 
@@ -170,7 +187,10 @@ class String
     def self.objc_type_encode; '*'; end
     def to_ffi_value(ffi_type)
         if ffi_type == Cocoa::Object
-            Cocoa::NSString._stringWithUTF8String(self).to_pointer
+#            Cocoa::NSString._stringWithUTF8String(self).to_pointer
+            s=Cocoa::NSString._stringWithUTF8String(self)
+            puts "str[#{s._retainCount.to_i}]"
+            s.to_pointer
         else
             self.to_pointer
         end

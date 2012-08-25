@@ -37,6 +37,7 @@ static struct mrb_data_type cocoa_object_data_type;
 static mrb_value
 cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 {
+    //printf("new_with_id=%p\n", pointer);
     MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
     if(assoc) {
         return assoc.mrb_obj;
@@ -90,9 +91,12 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     mrb_value pointer_mrb;
     mrb_get_args(mrb, "o", &pointer_mrb);
     id pointer = cfunc_pointer_ptr(pointer_mrb);
+    //printf("new=%p\n", pointer);
 
     MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
     if(assoc) {
+        //puts(">>>");
+        //mrb_p(mrb, assoc.mrb_obj);
         return assoc.mrb_obj;
     }
     
@@ -143,15 +147,17 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     mrb_value pointer;
     mrb_get_args(mrb, "o", &pointer);
 
-    id *obj = cfunc_pointer_ptr(pointer);
-    if(*obj == nil) {
+    id obj = *(id*)cfunc_pointer_ptr(pointer);
+    if(obj == nil) {
         return mrb_nil_value();
     }
 
-    MrbObjectMap *assoc = objc_getAssociatedObject(*obj, cocoa_state(mrb)->object_association_key);
+    MrbObjectMap *assoc = objc_getAssociatedObject(obj, cocoa_state(mrb)->object_association_key);
     if(assoc) {
+    //printf("refer assoc=%p\n",obj);
         return assoc.mrb_obj;
     }
+    //printf("refer=%p\n", obj);
 
     struct cocoa_object_data *data = malloc(sizeof(struct cocoa_object_data));
     data->mrb = mrb;
@@ -160,11 +166,11 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     data->autorelease = true;
 
     data->value._pointer = malloc(sizeof(id));
-    *((id*)data->value._pointer) = *obj;
+    *((id*)data->value._pointer) = obj;
 
-    [*obj retain];
+    [obj retain];
 
-    const char *class_name = object_getClassName(*obj);
+    const char *class_name = object_getClassName(obj);
     struct RClass *klass2;
     mrb_sym class_name_sym = mrb_intern(mrb, class_name);
     if (mrb_const_defined_at(mrb, cocoa_state(mrb)->namespace, class_name_sym)) {
@@ -176,15 +182,18 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, klass2, &cocoa_object_data_type, data));
     mrb_obj_iv_set(mrb, (struct RObject*)mrb_object(self), mrb_intern(mrb, "parent_pointer"), pointer); // keep for GC
 
-    if(assoc == NULL && *obj) {
+    if(assoc == NULL && obj) {
         assoc = [[MrbObjectMap alloc] init];
-        objc_setAssociatedObject(*obj, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(obj, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         [assoc release];
     }
     assoc.mrb_obj = self;
 
-    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(data->mrb)->sym_obj_holder);
+    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
     mrb_funcall_argv(mrb, keeper, mrb_intern(mrb, "push"), 1, &self);
+    //mrb_p(mrb, self);
+    //mrb_p(mrb, keeper);
+    //printf(">>refer=%p\n", obj);
 
     return self;
 }
@@ -277,7 +286,8 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 
     int margc, i;
     mrb_value method_name_mrb, *margs;
-    mrb_get_args(mrb, "o*", &method_name_mrb, &margs, &margc);
+    mrb_sym target;
+    mrb_get_args(mrb, "no*", &target, &method_name_mrb, &margs, &margc);
 
     char *method_name = mrb_string_value_ptr(mrb, method_name_mrb);
     SEL sel = NSSelectorFromString([NSString stringWithCString: method_name encoding:NSUTF8StringEncoding]);
@@ -287,10 +297,19 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
     Method method;
     if(obj == [obj class]) { // if(self is class) 
-        method = class_getClassMethod(obj, sel);
+        if(target == mrb_intern(mrb, "super")) {
+            method = class_getClassMethod(class_getSuperclass(obj), sel);
+        }
+        else {
+            method = class_getClassMethod(obj, sel);
+        }
     }
     else {
-        method = class_getInstanceMethod([(id)(get_cfunc_pointer_data((struct cfunc_type_data *)data)) class], sel);
+        Class klass = [(id)(get_cfunc_pointer_data((struct cfunc_type_data *)data)) class];
+        if(target == mrb_intern(mrb, "super")) {
+            klass = class_getSuperclass(klass);
+        }
+        method = class_getInstanceMethod(klass, sel);
     }
     if(method == NULL) {
         mrb_raise(mrb, E_NOMETHOD_ERROR, "no method name: %s", method_name);
@@ -315,7 +334,6 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     for(;i < cocoa_argc; i++) {
         arg_types[i] = mrb_value_to_mrb_ffi_type(mrb, margs[i - 2])->ffi_type_value;
     }
-    
     
     values = malloc(sizeof(void*) * cocoa_argc);
     
@@ -353,9 +371,8 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         ffi_call(&cif, fp, result_ptr, values);
         mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
         if(strcmp("alloc", method_name) == 0) {
-            //mresult = mrb_funcall(mrb, result_type_class, "refer", 2, mresult_p, mrb_true_value());
             mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
-            [(*(id*)result_ptr) release];
+            [(*(id*)result_ptr) autorelease];
         }
         else {
             mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
@@ -463,6 +480,7 @@ cocoa_object_destructor(mrb_state *mrb, void *p)
     struct cocoa_object_data *data = p;
 
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
+    printf("obj dest=%p (%p) rc=%d\n",obj,data,[obj retainCount]);
 
     if(data->autorelease) {
         [obj release];
@@ -492,7 +510,7 @@ cocoa_object_class_set(mrb_state *mrb, mrb_value klass)
     mrb_value pointer, val;
     mrb_get_args(mrb, "oo", &pointer, &val);
 
-    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_ffi_value", 1, cocoa_state(mrb)->object_class));
+    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_ffi_value", 1, mrb_obj_value(cocoa_state(mrb)->object_class)));
     *((id*)cfunc_pointer_ptr(pointer)) = *valp;
 
     return val;
