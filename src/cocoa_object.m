@@ -140,32 +140,29 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
 static mrb_value
 cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 {
-    struct cocoa_object_data *data = malloc(sizeof(struct cocoa_object_data));
-    data->mrb = mrb;
-    data->autofree = false;
-    data->refer = true;
-
-    mrb_value pointer, noretain;
-    if(mrb_get_args(mrb, "o|o", &pointer, &noretain) == 1) {
-        noretain = mrb_nil_value();
-    }
+    mrb_value pointer;
+    mrb_get_args(mrb, "o", &pointer);
 
     id *obj = cfunc_pointer_ptr(pointer);
     if(*obj == nil) {
         return mrb_nil_value();
     }
 
-    data->value._pointer = obj;
-
     MrbObjectMap *assoc = objc_getAssociatedObject(*obj, cocoa_state(mrb)->object_association_key);
     if(assoc) {
         return assoc.mrb_obj;
     }
 
-    if(!mrb_test(noretain)) {
-        [*obj retain];
-        data->autorelease = true;
-    }
+    struct cocoa_object_data *data = malloc(sizeof(struct cocoa_object_data));
+    data->mrb = mrb;
+    data->refer = true;
+    data->autofree = true;
+    data->autorelease = true;
+
+    data->value._pointer = malloc(sizeof(id));
+    *((id*)data->value._pointer) = *obj;
+
+    [*obj retain];
 
     const char *class_name = object_getClassName(*obj);
     struct RClass *klass2;
@@ -356,7 +353,9 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         ffi_call(&cif, fp, result_ptr, values);
         mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
         if(strcmp("alloc", method_name) == 0) {
-            mresult = mrb_funcall(mrb, result_type_class, "refer", 2, mresult_p, mrb_true_value());
+            //mresult = mrb_funcall(mrb, result_type_class, "refer", 2, mresult_p, mrb_true_value());
+            mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
+            [(*(id*)result_ptr) release];
         }
         else {
             mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
@@ -462,9 +461,8 @@ static void
 cocoa_object_destructor(mrb_state *mrb, void *p)
 {
     struct cocoa_object_data *data = p;
-    
+
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
-    MrbObjectMap *assoc = objc_getAssociatedObject(obj, cocoa_state(data->mrb)->object_association_key);
 
     if(data->autorelease) {
         [obj release];
