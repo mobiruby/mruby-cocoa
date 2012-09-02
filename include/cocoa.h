@@ -112,4 +112,7 @@ cocoa_state(mrb_state* mrb)
   return (struct cocoa_state *)(mrb->ud + cocoa_state_offset);
 }
 
+
+void cocoa_swizzle_release(id obj);
+
 #endif

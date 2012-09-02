@@ -50,6 +50,7 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
     data->autofree = false;
     data->autorelease = true;
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
+    cocoa_swizzle_release(pointer);
     [pointer retain];
 
     const char *class_name = object_getClassName(pointer);
@@ -107,6 +108,7 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     data->autofree = false;
     data->autorelease = true;
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
+    cocoa_swizzle_release(pointer);
     [pointer retain];
         
     //todo: should verify class
@@ -168,6 +170,7 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     data->value._pointer = malloc(sizeof(id));
     *((id*)data->value._pointer) = obj;
 
+    cocoa_swizzle_release(obj);
     [obj retain];
 
     const char *class_name = object_getClassName(obj);
@@ -291,6 +294,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 
     char *method_name = mrb_string_value_ptr(mrb, method_name_mrb);
     SEL sel = NSSelectorFromString([NSString stringWithCString: method_name encoding:NSUTF8StringEncoding]);
+    //printf("m1 %s\n",method_name);
 
     int cocoa_argc = margc + SELF_AND_SEL;
 
@@ -322,6 +326,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_ARGUMENT_ERROR, "ignore arguments number");
     }
     
+    //printf("m3 %s\n",method_name);
     arg_type_class = malloc(sizeof(mrb_value) * cocoa_argc);
     arg_types = malloc(sizeof(ffi_type*) * cocoa_argc);
     for(i = 0; i < cocoa_method_argc; i++) {
@@ -330,10 +335,12 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         free(argtype);
         arg_types[i] = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(arg_type_class[i]))->ffi_type_value;
     }
+    //printf("m4 %s\n",method_name);
 
     for(;i < cocoa_argc; i++) {
         arg_types[i] = mrb_value_to_mrb_ffi_type(mrb, margs[i - 2])->ffi_type_value;
     }
+    //printf("m5 %s\n",method_name);
     
     values = malloc(sizeof(void*) * cocoa_argc);
     
@@ -353,6 +360,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         args[0] = arg_type_class[i];
         values[i] = cfunc_pointer_ptr(mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args));
     }
+    //printf("m6 %s\n",method_name);
     
     char *result_cocoa_type = method_copyReturnType(method);
     mrb_value result_type_class = objc_type_to_cfunc_type(mrb, result_cocoa_type);
@@ -383,6 +391,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         cfunc_mrb_raise_without_jump(mrb, E_NAME_ERROR, "can't find method %s", method_name);
         goto error_exit;
     }
+    //printf("m8 %s\n",method_name);
     
 error_exit:
     if(values) {
@@ -393,6 +402,7 @@ error_exit:
     }
     free(arg_types);
     free(arg_type_class);
+//    [pool release];
 
     return mresult;
 }
@@ -480,8 +490,7 @@ cocoa_object_destructor(mrb_state *mrb, void *p)
     struct cocoa_object_data *data = p;
 
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
-    printf("obj dest=%p (%p) rc=%d\n",obj,data,[obj retainCount]);
-
+    
     if(data->autorelease) {
         [obj release];
     }

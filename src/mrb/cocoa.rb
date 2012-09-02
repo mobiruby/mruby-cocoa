@@ -187,10 +187,17 @@ class String
     def self.objc_type_encode; '*'; end
     def to_ffi_value(ffi_type)
         if ffi_type == Cocoa::Object
-#            Cocoa::NSString._stringWithUTF8String(self).to_pointer
-            s=Cocoa::NSString._stringWithUTF8String(self)
-            puts "str[#{s._retainCount.to_i}]"
-            s.to_pointer
+ s=           Cocoa::NSString._stringWithUTF8String(self)
+# s=           Cocoa::NSString._alloc._initWithUTF8String(self)
+            #p :refcount
+            #p s._retainCount.to_i
+            #p :rel
+#s._retain
+            #puts s._description._UTF8String.to_s
+p=            s.to_pointer
+            #            puts "str[#{s._retainCount.to_i}]=#{self}/#{self.object_id}/#{p.inspect}"
+
+            p
         else
             self.to_pointer
         end

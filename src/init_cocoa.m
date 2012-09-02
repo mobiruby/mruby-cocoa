@@ -14,6 +14,7 @@
 #include "mruby/class.h"
 
 #import <Foundation/Foundation.h>
+#include "ffi.h"
 
 size_t cocoa_state_offset = 0;
 
