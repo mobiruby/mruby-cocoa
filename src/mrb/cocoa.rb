@@ -3,8 +3,19 @@ $mobiruby_obj_holder = []
 $closure = []
 
 class Cocoa::Object
+    class << self
+        def type
+            @type || CFunc::Void
+        end
 
+        def type=(type_)
+            raise "Can't update" if CFunc::Pointer == self
+            @type = type_
+        end
+    end
+    
     def objc_property(prop_name)
+
         prop_name = prop_name.to_s
         prop_attr_str = objc_property_getAttributes(prop_name)
         getter, setter = prop_name, 'set'+prop_name[0,1].upcase+prop_name[1..-1]+":"
@@ -105,6 +116,14 @@ class Cocoa::Object
         end
     end
 
+    def is_kind_of?(klass)
+        if klass.is_a?(String) || klass.is_a?(Symbol)
+            klass =  CFunc::call CFunc::Pointer, "NSClassFromString", Cocoa::NSString._stringWithUTF8String(klass.to_s)
+        end
+
+        self._isKindOfClass(klass).to_i != 0
+    end
+
 end
 
 
@@ -187,17 +206,7 @@ class String
     def self.objc_type_encode; '*'; end
     def to_ffi_value(ffi_type)
         if ffi_type == Cocoa::Object
- s=           Cocoa::NSString._stringWithUTF8String(self)
-# s=           Cocoa::NSString._alloc._initWithUTF8String(self)
-            #p :refcount
-            #p s._retainCount.to_i
-            #p :rel
-#s._retain
-            #puts s._description._UTF8String.to_s
-p=            s.to_pointer
-            #            puts "str[#{s._retainCount.to_i}]=#{self}/#{self.object_id}/#{p.inspect}"
-
-            p
+            Cocoa::NSString._stringWithUTF8String(self).to_pointer
         else
             self.to_pointer
         end

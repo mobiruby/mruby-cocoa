@@ -2,6 +2,9 @@ class CreateInstanceTest1 < TestCase
   def test_10_nsstring
     @nsstr = Cocoa::NSString._stringWithUTF8String("string")
     a @nsstr.is_a?(Cocoa::Object)
+    a @nsstr.is_kind_of?("NSString")
+    a @nsstr.is_kind_of?("NSObject")
+    a !@nsstr.is_kind_of?("NSNumber")
     eq "<__NSCFConstantString", @nsstr.inspect[0,21]
     eq 6, @nsstr._length.value
   end
