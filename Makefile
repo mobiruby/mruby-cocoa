@@ -77,7 +77,7 @@ vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/l
 		MRUBY_LIBS="$(MRUBY_LIBS)" \
 		LIBFFI_CFLAGS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags)" \
 		LIBFFI_LIBS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)"
-	cp tmp/mruby-cfunc/include/* vendors/include
+	cp -r tmp/mruby-cfunc/include/* vendors/include/
 
 
 ##################
