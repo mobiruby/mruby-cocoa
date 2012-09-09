@@ -67,7 +67,7 @@ clean :
 # libmruby-cfunc.a
 tmp/mruby-cfunc:
 	mkdir -p tmp
-	cd tmp && git clone https://github.com/MobiRuby/mruby-cfunc.git
+	cd tmp && git clone https://github.com/mobiruby/mruby-cfunc.git
 
 vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/libmruby.a
 	cd tmp/mruby-cfunc/src && make MRBC="$(BASEDIR)/vendors/bin/mrbc" \
