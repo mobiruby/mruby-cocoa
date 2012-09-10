@@ -12,9 +12,16 @@
 
 #include "mruby.h"
 #include "mruby/class.h"
+#include "mruby/proc.h"
+#include "mruby/dump.h"
 
 #import <Foundation/Foundation.h>
+#include <setjmp.h>
 #include "ffi.h"
+
+#ifdef USE_MRBC_DATA
+extern const char mruby_data_cocoa[];
+#endif
 
 size_t cocoa_state_offset = 0;
 
@@ -49,7 +56,21 @@ void init_cocoa_module(mrb_state *mrb)
     init_cocoa_block(mrb, ns);
     init_cocoa_bridge_support(mrb);
 
+#ifdef USE_MRBC_DATA
+    int n = mrb_read_irep(mrb, mruby_data_cocoa);
+    if (n >= 0) {
+        mrb_irep *irep = mrb->irep[n];
+        struct RProc *proc = mrb_proc_new(mrb, irep);
+        proc->target_class = mrb->object_class;
+        mrb_run(mrb, proc, mrb_nil_value());
+    }
+    else if (mrb->exc) {
+        longjmp(*(jmp_buf*)mrb->jmp, 1);
+    }
+#else
     init_cocoa(mrb);
+#endif
+
 }
 
 void close_cocoa_module(mrb_state *mrb)
