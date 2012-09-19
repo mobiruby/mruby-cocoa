@@ -48,7 +48,7 @@ struct BridgeSupportConstTable
 struct BridgeSupportEnumTable
 {
     const char *name;
-    int value;
+    mrb_value value;
 };
 
 struct cocoa_state {

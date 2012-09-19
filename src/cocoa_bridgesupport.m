@@ -105,7 +105,7 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     struct BridgeSupportEnumTable *ecur = cocoa_state(mrb)->enum_table;
     while(ecur->name) {
         if(strcmp(namestr, ecur->name)==0) {
-            return mrb_fixnum_value(ecur->value);
+            return ecur->value;
         }
         ++ecur;
     }
