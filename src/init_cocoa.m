@@ -40,7 +40,7 @@ void init_cocoa_module(mrb_state *mrb)
         puts("Too much open vm"); // TODO
     }
 
-    if(cocoa_mrb_states==NULL) {
+    if(cocoa_mrb_states == NULL) {
         cocoa_mrb_states = malloc(sizeof(mrb_state *) * MAX_COCOA_MRB_STATE_COUNT);
         for(int i = 0; i < MAX_COCOA_MRB_STATE_COUNT; ++i) {
             cocoa_mrb_states[i] = NULL;
