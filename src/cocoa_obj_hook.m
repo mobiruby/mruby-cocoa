@@ -81,8 +81,6 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
                 MrbObjectMap *assoc = objc_getAssociatedObject(self, cocoa_state(mrb)->object_association_key);
                 if(assoc) {
                     mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
-//mrb_p(mrb, keeper);
-NSLog(@"rel=%@", self);
                     mrb_value mrb_obj = assoc.mrb_obj;
                     mrb_funcall_argv(mrb, keeper, cocoa_state(mrb)->sym_delete, 1, &mrb_obj);
                 }
