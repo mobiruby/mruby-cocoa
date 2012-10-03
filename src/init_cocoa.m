@@ -55,6 +55,7 @@ void init_cocoa_module(mrb_state *mrb)
     init_cocoa_object(mrb, ns);
     init_cocoa_block(mrb, ns);
     init_cocoa_bridge_support(mrb);
+    init_cocoa_thread(mrb, ns);
 
 #ifdef USE_MRBC_DATA
     int n = mrb_read_irep(mrb, mruby_data_cocoa);

@@ -31,6 +31,8 @@
 #include "mruby.h"
 #include "cfunc.h"
 
+#include <pthread.h>
+
 
 struct BridgeSupportStructTable
 {
@@ -52,6 +54,8 @@ struct BridgeSupportEnumTable
 };
 
 struct cocoa_state {
+    pthread_t *thread;
+
     struct RClass *namespace;
 
     struct RClass *object_class;
