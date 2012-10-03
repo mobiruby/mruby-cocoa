@@ -17,6 +17,7 @@
 #include "mruby/string.h"
 #include "mruby/class.h"
 #include "mruby/data.h"
+#include "mruby/array.h"
 
 #include "ffi.h"
 
@@ -534,13 +535,35 @@ cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
     const char *class_name = mrb_sym2name(mrb, mrb_symbol(class_name_mrb));
     
     if(!NSClassFromString([NSString stringWithCString:class_name encoding:NSUTF8StringEncoding])) {
-       mrb_raise(mrb, E_NAME_ERROR, "Can't load %s class from Cocoa", class_name);
+       mrb_raise(mrb, E_NAME_ERROR, "Can't load %s class in Cocoa", class_name);
     }
     
     struct RClass *object_class = cocoa_state(mrb)->object_class;
     return mrb_obj_value(mrb_define_class_under(mrb, cocoa_state(mrb)->namespace, class_name, object_class));
 }
 
+
+mrb_value
+cocoa_object_class_protocol(mrb_state *mrb, mrb_value klass)
+{
+    Class objc_class = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
+        
+    mrb_value *params;
+    int params_count;
+    mrb_get_args(mrb, "*", &params, &params_count);
+
+    for(int i = 0; i < params_count; ++i) {
+        mrb_value name = mrb_funcall(mrb, params[i], "to_s", 0);
+        struct RString *str = mrb_str_ptr(name);
+        Protocol *protocol = objc_getProtocol(str->ptr);
+        if(!protocol) {
+            mrb_raise(mrb, E_NAME_ERROR, "Can't find %s protocol in Cocoa", str->ptr);
+        }
+        class_addProtocol(objc_class, protocol);
+    }
+
+    return klass;
+}
 
 /*
  * internal data
@@ -564,6 +587,7 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     mrb_define_class_method(mrb, object_class, "refer", cocoa_object_class_refer, ARGS_REQ(2));
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_msgSend", cocoa_object_class_objc_msgSend, ARGS_ANY());
+    mrb_define_class_method(mrb, object_class, "protocol", cocoa_object_class_protocol, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "new", cocoa_object_class_new, ARGS_REQ(1));
     mrb_define_class_method(mrb, object_class, "set", cocoa_object_class_set, ARGS_REQ(2));
 
