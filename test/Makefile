@@ -3,18 +3,15 @@
 
 # project-specific macros
 # extension of the executable-file is modifiable(.exe .out ...)
-BASEDIR = $(shell pwd)
-TARGET := $(BASEDIR)/cocoa_test
-MRBCSRC := $(patsubst %.rb,%.c,$(wildcard $(BASEDIR)/mrb/*.rb))
+BASEDIR = .
+REQUIRES := $(wildcard $(BASEDIR)/t/_*.rb)
+TESTSRCS := $(filter-out $(REQUIRES),$(wildcard $(BASEDIR)/t/*.rb))
+TESTOBJS := $(patsubst %.rb,%.o,$(TESTSRCS))
+TESTS := $(patsubst %.rb,%.exe,$(TESTSRCS))
+REQUIREOBJS := $(patsubst %.rb,%.o,$(REQUIRES))
+
 LIBR := $(BASEDIR)/../lib/libmruby-cocoa.a
-
 EXCEPT1 := $(MRBCSRC)
-
-OBJ1 := $(patsubst %.c,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.c)))
-OBJ2 := $(patsubst %.m,%.o,$(filter-out $(EXCEPT1),$(wildcard $(BASEDIR)/*.m)))
-OBJMRB := $(patsubst %.c,%.o,$(MRBCSRC))
-OBJS := $(OBJ1) $(OBJ2) $(OBJ3)
-
 MRBC := $(BASEDIR)/../vendors/bin/mrbc
 
 # libraries, includes
@@ -28,7 +25,7 @@ LIBFFI_LIBS = $(shell pkg-config libffi --libs)
 ifeq ($(shell uname -s),Darwin)
   LDFLAGS = -Wl,-allow_stack_execute
 else
-  LDFLAGS = 
+  LDFLAGS = -Wl,--export-dynamic
 endif
 
 ifeq ($(strip $(COMPILE_MODE)),)
@@ -44,7 +41,7 @@ else ifeq ($(COMPILE_MODE),small)
   CFLAGS = -Os -rdynamic
 endif
 
-ALL_CFLAGS = -Wall -Werror-implicit-function-declaration -std=c99 $(CFLAGS) $(MRUBY_CFLAGS) $(LIBFFI_CFLAGS)
+ALL_CFLAGS = -Wall -Werror-implicit-function-declaration -std=c99 $(CFLAGS) $(CFUNC_CFLAGS) $(MRUBY_CFLAGS) $(LIBFFI_CFLAGS)
 
 
 
@@ -60,34 +57,40 @@ export CAT := cat
 # generic build targets, rules
 
 .PHONY : all
-all : $(TARGET)
+all : $(TESTS)
 
 .PHONY : run
-run : $(TARGET)
-	$(TARGET)
+run : $(TESTS)
+	@echo
+	@echo "*** Start tests ***"
+	@echo
+	@for command in $(TESTS) ; do \
+	    $$command || exit 1 ; \
+	    echo ; \
+	done
 
 # executable constructed using linker from object files
-$(TARGET) : $(OBJS) $(OBJMRB) $(LIBR)
-	$(LL) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(MRUBY_LIBS) $(LIBFFI_LIBS) $(CFUNC_LIBS) $(LIBS)
+$(TESTS) : %.exe : %.o $(REQUIREOBJS)
+	echo $(REQUIREOBJS)
+	$(LL) $< -o $@ $(REQUIREOBJS) $(CFLAGS) $(LDFLAGS) $(LIBR) $(CFUNC_LIBS) $(LIBFFI_LIBS) $(MRUBY_LIBS) $(LIBS) 
 
 -include $(OBJS:.o=.d) $(OBJMRB:.o=.d)
 
 # mrby complie
-$(OBJMRB) : %.o : %.rb
-	$(MRBC) -Cinit_$(*F) $<
-	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).c -o $@
+$(TESTOBJS) : %.o : %.rb
+	cat $< | ruby -e "print STDIN.read.gsub(/#\s*BEGIN\s+C.*/m,'')" | $(MRBC) -o- -Btest_irep - > $(basename $<).m
+	echo "const char* appname = \"$(basename $<)\";" >> $(basename $<).m
+	cat main.m >> $(basename $<).m
+	cat $< | ruby -e 's=STDIN.read;print s.gsub(/.*#\s*BEGIN\s+C(.*)/m,"\\1") if s.match(/#\s*BEGIN\s+C/)' >> $(basename $<).m
+	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).m -o $@
 
-# objects compiled from source
-$(OBJ1) : %.o : %.c
-	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
-
-$(OBJ2) : %.o : %.m
-	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $< -o $@
+$(REQUIREOBJS) : %.o : %.rb
+	$(MRBC) -Bmruby_data_`basename $(basename $<)` $<
+	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).m -o $@
 
 # clean up
 .PHONY : clean #cleandep
 clean :
 	@echo "make: removing targets, objects and depend files of `pwd`"
-	-$(RM_F) $(TARGET) $(OBJS) $(OBJMRB) $(MRB)
-	-$(RM_F) $(OBJS:.o=.d) $(OBJY:.o=.d)
-	-$(RM_F) $(patsubst %.c,%.o,$(EXCEPT1)) $(patsubst %.c,%.d,$(EXCEPT1))
+	-$(RM_F) $(TESTS) $(TESTOBJS) $(TESTS)
+	-$(RM_F) $(TESTOBJS:.o=.d) $(TESTOBJS:.o=.m)

@@ -3,6 +3,7 @@
 # 3rd party #
 #############
 vendors
+include/ffi
 
 # Compiled source #
 ###################

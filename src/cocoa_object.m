@@ -211,7 +211,7 @@ mruby_class_to_objc_class(mrb_state *mrb, struct RClass *klass)
 {
     const char *class_name = mrb_class_name(mrb, klass);
     if(strncmp(class_name, "Cocoa::", 7)==0) {
-        //mrb_raise(mrb, E_NAME_ERROR, "%s is not cocoa class", class_name);
+        //mrb_raisef(mrb, E_NAME_ERROR, "%s is not cocoa class", class_name);
         class_name += 7;
     }
     return NSClassFromString([NSString stringWithCString: class_name encoding:NSUTF8StringEncoding]);
@@ -317,7 +317,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         method = class_getInstanceMethod(klass, sel);
     }
     if(method == NULL) {
-        mrb_raise(mrb, E_NOMETHOD_ERROR, "no method name: %s", method_name);
+        mrb_raisef(mrb, E_NOMETHOD_ERROR, "no method name: %s", method_name);
     }
     
     unsigned cocoa_method_argc = method_getNumberOfArguments(method);
@@ -378,6 +378,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, cocoa_argc, result_ffi_type, arg_types) == FFI_OK) {
         // todo: should handling objective-c exception
         ffi_call(&cif, fp, result_ptr, values);
+
         mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
         if(strcmp("alloc", method_name) == 0) {
             mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
@@ -441,7 +442,7 @@ cocoa_object_class_inherited(mrb_state *mrb, mrb_value klass)
     if(!objc_klass) {
         const char *class_name = mrb_class_name(mrb, (struct RClass *)mrb_object(subclass));
         if(strncmp(class_name, "Cocoa::", 7)!=0) { // todo
-            mrb_raise(mrb, E_NAME_ERROR, "%s should define under Cocoa module", class_name);
+            mrb_raisef(mrb, E_NAME_ERROR, "%s should define under Cocoa module", class_name);
         }
         class_name += 7; // todo
         Class super_class = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
@@ -535,7 +536,7 @@ cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
     const char *class_name = mrb_sym2name(mrb, mrb_symbol(class_name_mrb));
     
     if(!NSClassFromString([NSString stringWithCString:class_name encoding:NSUTF8StringEncoding])) {
-       mrb_raise(mrb, E_NAME_ERROR, "Can't load %s class in Cocoa", class_name);
+       mrb_raisef(mrb, E_NAME_ERROR, "Can't load %s class in Cocoa", class_name);
     }
     
     struct RClass *object_class = cocoa_state(mrb)->object_class;
@@ -557,7 +558,7 @@ cocoa_object_class_protocol(mrb_state *mrb, mrb_value klass)
         struct RString *str = mrb_str_ptr(name);
         Protocol *protocol = objc_getProtocol(str->ptr);
         if(!protocol) {
-            mrb_raise(mrb, E_NAME_ERROR, "Can't find %s protocol in Cocoa", str->ptr);
+            mrb_raisef(mrb, E_NAME_ERROR, "Can't find %s protocol in Cocoa", str->ptr);
         }
         class_addProtocol(objc_class, protocol);
     }

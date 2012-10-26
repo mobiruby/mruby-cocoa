@@ -1,149 +1,137 @@
 #include "cocoa.h"
 #include "cfunc.h"
 
-#import <Foundation/Foundation.h>
+#include "mruby.h"
+#include "mruby/dump.h"
+#include "mruby/proc.h"
+#include "mruby/compile.h"
 
+#include <dlfcn.h>
+#import <Foundation/Foundation.h>
 
 struct mrb_state_ud {
     struct cfunc_state cfunc_state;
     struct cocoa_state cocoa_state;
 };
 
-struct BridgeSupportStructTable struct_table[] = {
-    {.name = "CGPoint", .definition = "x:f:y:f"},
-    {.name = "CGSize", .definition = "width:f:height:f"},
-    {.name = "CGRect", .definition = "origin:{CGPoint}:size:{CGSize}"},
-    {.name = "MobiCocoaStruct1", .definition = "i:i:d:d:str:*:obj:@:iptr:^i"},
-    {.name = "MobiCocoaStruct2", .definition = "i1:i:i2:i"},
-    {.name = NULL, .definition = NULL}
-};
+const char* assert_rb = 
+"$ok_test = 0" "\n"
+"$ko_test = 0" "\n"
+"$kill_test = 0" "\n"
+"$asserts = []" "\n"
+""
+"def assert(test, failure_message = 'Assertion failed')" "\n"
+"  begin" "\n"
+"    if test" "\n"
+"      $ok_test += 1" "\n"
+"      print('.')" "\n"
+"    else" "\n"
+"      $asserts.push(['Fail: ', failure_message])" "\n"
+"      $ko_test += 1" "\n"
+"      print('F')" "\n"
+"    end" "\n"
+"  rescue Exception => e" "\n"
+"    $asserts.push(['Error: ', failure_message, e])" "\n"
+"    $kill_test += 1" "\n"
+"    print('X')" "\n"
+"  end" "\n"
+"end" "\n"
+""
+"def assert_equal(expected, actual, failure_message = nil)" "\n"
+"  failure_message ||= \"#{actual} expected '#{expected}' assertion failed\"" "\n"
+"  assert(expected === actual, failure_message)" "\n"
+"end" "\n"
+""
+"def assert_not_equal(expected, actual, failure_message = nil)" "\n"
+"  assert(!(expected === actual), \"#{actual} expected not '#{expected}' assertion failed\")" "\n"
+"end" "\n"
+""
+"def assert_raise(*args)" "\n"
+"  failure_message = args.last.is_a?(String) ? args.pop : nil" "\n"
+"  begin" "\n"
+"    yield" "\n"
+"    assert(false, \"#{args} expected but none was thrown.\")" "\n"
+"  rescue Exception => e" "\n"
+"    assert(args.include?(e.class), \"#{args} expected but was #{e}.\")" "\n"
+"  end" "\n"
+"end" "\n"
+""
+// This method copy from mruby/test/assert.rb" "\n"
+// License: MITL mruby developers" "\n"
+// Report the test result and print all assertions" "\n"
+// which were reported broken." "\n"
+"def test_results()" "\n"
+"  print \"\\n\"" "\n"
+"  $asserts.each do |err, str, e|" "\n"
+"    print(err);" "\n"
+"    print(str);" "\n"
+"    if e" "\n"
+"      print(\" => \")" "\n"
+"      print(e.message)" "\n"
+"    end" "\n"
+"    print(\"\\n\")" "\n"
+"  end" "\n"
+""
+"  $total_test = $ok_test.+($ko_test)" "\n"
+"  print('Total: ')" "\n"
+"  print($total_test)" "\n"
+"  print(\"\\n\")" "\n"
+""
+"  print('   OK: ')" "\n"
+"  print($ok_test)" "\n"
+"  print(\"\\n\")" "\n"
+"  print('   KO: ')" "\n"
+"  print($ko_test)" "\n"
+"  print(\"\\n\")" "\n"
+"  print('Crash: ')" "\n"
+"  print($kill_test)" "\n"
+"  print(\"\\n\")" "\n"
+""
+"  ($ko_test + $kill_test) == 0" "\n"
+"end";
 
-struct BridgeSupportConstTable const_table[] = {
-    {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
-    {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
-    {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
-    {.name = NULL, .type=NULL, .value = NULL}
-};
+static 
+void mrb_state_init(mrb_state *mrb)
+{
+    mrb->ud = malloc(sizeof(struct mrb_state_ud));
+    init_cfunc_module(mrb, mrb_state_init);
+    init_cocoa_module(mrb);
 
-struct BridgeSupportEnumTable enum_table[] = {
-    {.name="enum1", .value=1},
-    {.name = NULL, .value = NULL}
-};
-
-void
-init_unittest(mrb_state *mrb);
-
-void
-init_cocoa_test(mrb_state *mrb);
+    void *dlh = dlopen(NULL, RTLD_LAZY);
+    void (*fp)(mrb_state*) = dlsym(dlh, "load_rubyvm");
+    if(fp) {
+        fp(mrb);
+    }
+}
 
 
 int main(int argc, char *argv[])
 {
-    mrb_state *mrb = mrb_open();
-    mrb->ud = malloc(sizeof(struct mrb_state_ud));
+    printf("%s: ", appname);
 
     cfunc_state_offset = cfunc_offsetof(struct mrb_state_ud, cfunc_state);
-    init_cfunc_module(mrb);
-
     cocoa_state_offset = cocoa_offsetof(struct mrb_state_ud, cocoa_state);
-    init_cocoa_module(mrb);
-    load_cocoa_bridgesupport(mrb, struct_table, const_table, enum_table);
 
-    init_unittest(mrb);
+    mrb_state *mrb = mrb_open();
+    mrb_state_init(mrb);
+
+    mrb_load_string(mrb, assert_rb);
     if (mrb->exc) {
         mrb_p(mrb, mrb_obj_value(mrb->exc));
+        exit(1);
     }
 
-    init_cocoa_test(mrb);
+    int n = mrb_read_irep(mrb, test_irep);
+    mrb_run(mrb, mrb_proc_new(mrb, mrb->irep[n]), mrb_top_self(mrb));
     if (mrb->exc) {
         mrb_p(mrb, mrb_obj_value(mrb->exc));
+        mrb_load_string(mrb, "test_results();");
+        exit(1);
+    }
+    if(mrb_test(mrb_load_string(mrb, "test_results()"))) {
+        exit(0);
+    }
+    else {
+        exit(1);
     }
 }
-
-struct MobiCocoaStruct1 {
-    int i;
-    double d;
-    const char* str;
-    id obj;
-    int *iptr;
-};
-
-struct MobiCocoaStruct2 {
-    int i1, i2;
-};
-
-@interface MobiCocoaTest1 : NSObject {
-    NSString *prop2;
-    struct MobiCocoaStruct1 struct1;
-}
-@property(retain,getter=prop1_,readonly) NSString *prop1;
-@property(retain) NSString *prop2;
-@property(assign) struct MobiCocoaStruct1 struct1;
-@end
-
-
-@implementation MobiCocoaTest1
-
-- (struct MobiCocoaStruct1)struct1
-{
-    struct1.i = 100;
-    return struct1;
-}
-
-- (void)setStruct1:(struct MobiCocoaStruct1)str
-{
-    struct1 = str;
-}
-
-- (NSString*)prop1_
-{
-    return @"PROP1_";
-}
-
-- (NSString*)prop1
-{
-    return @"PROP1";
-}
-
-- (NSString*)prop2
-{
-    return prop2;
-}
-
-- (void)setProp2:(NSString*)str
-{
-    [prop2 release];
-    prop2 = [str retain];
-}
-
-+ (NSString*)classMethod1
-{
-    return @"classMethod1Test";
-}
-
-- (NSString*)intToString:(int)value
-{
-    return [NSString stringWithFormat: @"value=%d", value];
-}
-
-- (NSString*)uint16ToString:(unsigned short)value
-{
-    return [NSString stringWithFormat: @"value=%hu", value];
-}
-
-- (int)testBlocks1:(int (^)(int))block
-{
-    int result = block(2) * block(3);
-    return result;
-}
-
-- (int)testBlocks2:(int (^)(int))block
-{
-    int (^myBlock)(int) = ^(int num) {
-        return block(1+num) * block(2+num);
-    };
-    int result = myBlock(1);
-    return result;
-}
-@end
-

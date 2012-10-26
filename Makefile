@@ -17,6 +17,7 @@ else ifeq ($(COMPILE_MODE),release)
 else ifeq ($(COMPILE_MODE),small)
   CFLAGS = -Os
 endif
+CFLAGS += -pthread
 
 BASEDIR = $(shell pwd)
 INCLUDES = -I$(BASEDIR)/include -I$(BASEDIR)/vendors/include
@@ -69,6 +70,7 @@ tmp/mruby-cfunc:
 	mkdir -p tmp
 	cd tmp && git clone https://github.com/mobiruby/mruby-cfunc.git
 
+
 vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/libmruby.a
 	cd tmp/mruby-cfunc/src && make MRBC="$(BASEDIR)/vendors/bin/mrbc" \
 		CFLAGS="$(CFLAGS)" \
@@ -87,8 +89,10 @@ tmp/libffi:
 	cd tmp && git clone https://github.com/atgreen/libffi.git
 
 vendors/lib/libffi.a: tmp/libffi
-	echo $(BASEDIR)
-	cd tmp/libffi && ./configure --prefix=$(BASEDIR)/vendors && make install
+	cd tmp/libffi && ./configure --prefix=`pwd`/../../vendors && make clean install CFLAGS="$(CFLAGS)"
+	mkdir -p include/ffi
+	cp -r `pkg-config vendors/lib/pkgconfig/libffi.pc --cflags-only-I | sed -e "s/ /\/*/" | sed -e "s/-I/ /"` include/ffi
+
 
 
 ##################
@@ -96,9 +100,12 @@ vendors/lib/libffi.a: tmp/libffi
 tmp/mruby:
 	mkdir -p tmp/mruby
 	cd tmp; git clone https://github.com/mruby/mruby.git
+	sed -i -e "s/typedef int mrb_int/typedef int64_t mrb_int/g" tmp/mruby/include/mrbconf.h
+	sed -i -e "s/define MRB_INT_MIN INT_MIN/define MRB_INT_MIN INT64_MIN/g" tmp/mruby/include/mrbconf.h
+	sed -i -e "s/define MRB_INT_MAX INT_MAX/define MRB_INT_MAX INT64_MAX/g" tmp/mruby/include/mrbconf.h
 
 vendors/lib/libmruby.a: tmp/mruby
-	cd tmp/mruby && make
+	cd tmp/mruby && make clean && make all CFLAGS="$(CFLAGS)"
 	cp -r tmp/mruby/include vendors/
 	cp -r tmp/mruby/lib vendors/
 	cp -r tmp/mruby/bin vendors/
