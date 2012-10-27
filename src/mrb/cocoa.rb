@@ -198,7 +198,7 @@ class CFunc::Float
     def self.objc_type_encode; 'f'; end
 end
 
-class CFunc::Dobule
+class CFunc::Double
     def self.objc_type_encode; 'd'; end
 end
 
