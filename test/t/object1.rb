@@ -167,3 +167,5 @@ struct MobiCocoaStruct2 {
     int result = myBlock(1);
     return result;
 }
+
+@end

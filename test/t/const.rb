@@ -1,4 +1,4 @@
-assert_equal 3061152000, Cocoa::Const::kCFAbsoluteTimeIntervalSince1904.to_i
+assert_equal 12345, Cocoa::Const::test1.to_i
 assert_equal 1, Cocoa::Const::enum1
 
 
@@ -9,10 +9,10 @@ struct BridgeSupportStructTable struct_table[] = {
     {.name = NULL, .definition = NULL}
 };
 
+const double test1 = 12345;
+
 struct BridgeSupportConstTable const_table[] = {
-    {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
-    {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
-    {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
+    {.name = "test1", .type = "d", .value = &test1},
     {.name = NULL, .type=NULL, .value = NULL}
 };
 

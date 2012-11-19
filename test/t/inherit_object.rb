@@ -116,3 +116,5 @@ struct MobiCocoaStruct2 {
 {
     return [NSString stringWithFormat: @"value=%hu", value];
 }
+
+@end
