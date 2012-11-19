@@ -67,9 +67,6 @@ struct BridgeSupportStructTable struct_table[] = {
 };
 
 struct BridgeSupportConstTable const_table[] = {
-    {.name = "kCFAbsoluteTimeIntervalSince1904", .type = "d", .value = &kCFAbsoluteTimeIntervalSince1904},
-    {.name = "kCFNumberFormatterCurrencyCode", .type = "^{__CFString=}", .value = &kCFNumberFormatterCurrencyCode},
-    {.name = "kCFTypeArrayCallBacks", .type = "{_CFArrayCallBacks=i^?^?^?^?}", .value = &kCFTypeArrayCallBacks},
     {.name = NULL, .type=NULL, .value = NULL}
 };
 
