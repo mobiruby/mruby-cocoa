@@ -100,9 +100,7 @@ vendors/lib/libffi.a: tmp/libffi
 tmp/mruby:
 	mkdir -p tmp/mruby
 	cd tmp; git clone https://github.com/mruby/mruby.git
-	sed -i -e "s/typedef int mrb_int/typedef int64_t mrb_int/g" tmp/mruby/include/mrbconf.h
-	sed -i -e "s/define MRB_INT_MIN INT_MIN/define MRB_INT_MIN INT64_MIN/g" tmp/mruby/include/mrbconf.h
-	sed -i -e "s/define MRB_INT_MAX INT_MAX/define MRB_INT_MAX INT64_MAX/g" tmp/mruby/include/mrbconf.h
+	sed -i -e 's/\/\/\#define MRB_INT64/\#define MRB_INT64/' tmp/mruby/include/mrbconf.h
 
 vendors/lib/libmruby.a: tmp/mruby
 	cd tmp/mruby && make clean && make all CFLAGS="$(CFLAGS)"

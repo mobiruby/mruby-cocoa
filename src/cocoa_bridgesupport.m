@@ -17,7 +17,6 @@
 #include "mruby/variable.h"
 
 #import <Foundation/Foundation.h>
-#import <objc/message.h>
 #import <objc/runtime.h>
 
 void
