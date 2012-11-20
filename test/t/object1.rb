@@ -16,10 +16,6 @@ assert_equal "value=10", result._UTF8String.to_s
 result = test1._uint16ToString(CFunc::SInt8(-1))
 assert_equal "value=255", result._UTF8String.to_s
 
-# call instance method with ruby value
-result = test1._uint16ToString(-1)
-assert_equal "value=65535", result._UTF8String.to_s
-
 # get prop
 result = test1[:prop1]
 assert_equal "PROP1_", result._UTF8String.to_s
@@ -102,6 +98,9 @@ struct MobiCocoaStruct2 {
 
 
 @implementation MobiCocoaTest1
+
+@dynamic prop1;
+@synthesize prop2, struct1;
 
 - (struct MobiCocoaStruct1)struct1
 {

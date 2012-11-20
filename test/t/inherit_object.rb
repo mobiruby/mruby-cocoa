@@ -67,6 +67,9 @@ struct MobiCocoaStruct2 {
 
 @implementation MobiCocoaTest1
 
+@dynamic prop1;
+@synthesize prop2, struct1;
+
 - (struct MobiCocoaStruct1)struct1
 {
     struct1.i = 100;

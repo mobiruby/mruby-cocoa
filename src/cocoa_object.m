@@ -186,9 +186,8 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     mrb_obj_iv_set(mrb, (struct RObject*)mrb_object(self), mrb_intern(mrb, "parent_pointer"), pointer); // keep for GC
 
     if(assoc == NULL && obj) {
-        assoc = [[MrbObjectMap alloc] init];
+        assoc = [[[MrbObjectMap alloc] init] autorelease];
         objc_setAssociatedObject(obj, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        [assoc release];
     }
     assoc.mrb_obj = self;
 

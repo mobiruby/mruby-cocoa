@@ -15,7 +15,6 @@ class Cocoa::Object
     end
     
     def objc_property(prop_name)
-
         prop_name = prop_name.to_s
         prop_attr_str = objc_property_getAttributes(prop_name)
         getter, setter = prop_name, 'set'+prop_name[0,1].upcase+prop_name[1..-1]+":"

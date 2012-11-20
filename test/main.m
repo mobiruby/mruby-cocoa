@@ -107,6 +107,9 @@ void mrb_state_init(mrb_state *mrb)
 
 int main(int argc, char *argv[])
 {
+    NSAutoreleasePool *pool;
+    pool = [[NSAutoreleasePool alloc] init];
+
     printf("%s: ", appname);
 
     cfunc_state_offset = cfunc_offsetof(struct mrb_state_ud, cfunc_state);
