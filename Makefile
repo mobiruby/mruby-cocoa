@@ -78,8 +78,8 @@ vendors/lib/libmruby-cfunc.a: tmp/mruby-cfunc vendors/lib/libffi.a vendors/lib/l
 		TARGET="$(BASEDIR)/vendors/lib/libmruby-cfunc.a" \
 		MRUBY_CFLAGS="$(MRUBY_CFLAGS)" \
 		MRUBY_LIBS="$(MRUBY_LIBS)" \
-		LIBFFI_CFLAGS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags)" \
-		LIBFFI_LIBS="$(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)"
+		LIBFFI_CFLAGS="$(LIBFFI_CFLAGS)" \
+		LIBFFI_LIBS="$(LIBFFI_LIBS)"
 	cp -r tmp/mruby-cfunc/include/* vendors/include/
 
 
@@ -91,8 +91,6 @@ tmp/libffi:
 
 vendors/lib/libffi.a: tmp/libffi
 	cd tmp/libffi && ./configure --prefix=`pwd`/../../vendors && make clean install CFLAGS="$(CFLAGS)"
-	mkdir -p include/ffi
-	cp -r `pkg-config vendors/lib/pkgconfig/libffi.pc --cflags-only-I | sed -e "s/ /\/*/" | sed -e "s/-I/ /"` include/ffi
 
 
 
