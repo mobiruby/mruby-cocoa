@@ -2,8 +2,9 @@
 # basic build file for mruby
 
 # compiler, linker (gcc), archiver, parser generator
-export CC = gcc
-export LL = gcc
+CC = clang
+LL = clang
+LIBFFI_VERSION = 3.0.11
 
 ifeq ($(strip $(COMPILE_MODE)),)
   # default compile option
@@ -28,8 +29,8 @@ MRUBY_LIBS = -L$(BASEDIR)/vendors/lib -lmruby
 CFUNC_CFLAGS = -I$(BASEDIR)/vendors/include
 CFUNC_LIBS = -L$(BASEDIR)/vendors/lib -lmruby-cfunc
 
-LIBFFI_CFLAGS = $(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --cflags)
-LIBFFI_LIBS = $(shell pkg-config $(BASEDIR)/vendors/lib/pkgconfig/libffi.pc --libs)
+LIBFFI_CFLAGS = -I$(BASEDIR)/vendors/lib/libffi-$(LIBFFI_VERSION)/include/
+LIBFFI_LIBS = $(BASEDIR)/vendors/lib/libffi.a
 
 ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(MRUBY_CFLAGS)
 MAKE_FLAGS = --no-print-directory CC='$(CC)' LL='$(LL)' CFLAGS='$(ALL_CFLAGS)' \
