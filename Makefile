@@ -26,17 +26,18 @@ INCLUDES = -I$(BASEDIR)/include -I$(BASEDIR)/vendors/include
 MRUBY_CFLAGS = -I$(BASEDIR)/vendors/include
 MRUBY_LIBS = -L$(BASEDIR)/vendors/lib -lmruby
 
-CFUNC_CFLAGS = -I$(BASEDIR)/vendors/include
-CFUNC_LIBS = -L$(BASEDIR)/vendors/lib -lmruby-cfunc
-
 LIBFFI_CFLAGS = -I$(BASEDIR)/vendors/lib/libffi-$(LIBFFI_VERSION)/include/
 LIBFFI_LIBS = $(BASEDIR)/vendors/lib/libffi.a
+
+CFUNC_CFLAGS = -I$(BASEDIR)/vendors/include
+CFUNC_LIBS = -L$(BASEDIR)/vendors/lib -lmruby-cfunc
 
 ALL_CFLAGS = $(CFLAGS) $(INCLUDES) $(MRUBY_CFLAGS)
 MAKE_FLAGS = --no-print-directory CC='$(CC)' LL='$(LL)' CFLAGS='$(ALL_CFLAGS)' \
 	LIBFFI_CFLAGS='$(LIBFFI_CFLAGS)' LIBFFI_LIBS='$(LIBFFI_LIBS)' \
 	CFUNC_CFLAGS='$(CFUNC_CFLAGS)' CFUNC_LIBS='$(CFUNC_LIBS)' \
 	MRUBY_CFLAGS='$(MRUBY_CFLAGS)' MRUBY_LIBS='$(MRUBY_LIBS)'
+
 
 ##############################
 # internal variables
@@ -91,7 +92,6 @@ tmp/libffi:
 
 vendors/lib/libffi.a: tmp/libffi
 	cd tmp/libffi && ./configure --prefix=`pwd`/../../vendors && make clean install CFLAGS="$(CFLAGS)"
-
 
 
 ##################
