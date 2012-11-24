@@ -9,13 +9,23 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
     make test
 
 
+## Current status
+
+- [x] define class
+- [x] define instance method
+- [x] define class method
+- [ ] access to instance variables
+- [ ] declare property
+- [x] use property
+- [ ] define protocol
+- [x] adopt protocol
+- [ ] handle exception
+
+
 ## Todo
 
 * test! test! test!
-* support long and long long
 * check circular reference
-* define properties
-* define and use interface
 * examples
 * documents
 
