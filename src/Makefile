@@ -62,7 +62,7 @@ $(TARGET) : $(OBJS) $(OBJMRB)
 
 # mrby complie
 $(OBJMRB) : %.o : %.rb
-	$(MRBC) -Cinit_$(*F) $<
+	$(MRBC) -Cinit_cocoa_$(*F)_mrb $<
 	$(CC) $(ALL_CFLAGS) -MMD $(INCLUDES) -c $(basename $<).c -o $@
 
 # objects compiled from source

@@ -27,7 +27,10 @@ size_t cocoa_state_offset = 0;
 
 // generate from mrb/cfunc_rb.rb
 void
-init_cocoa(mrb_state *mrb);
+init_cocoa_cocoa_mrb(mrb_state *mrb);
+init_cocoa_object_mrb(mrb_state *mrb);
+init_cocoa_block_mrb(mrb_state *mrb);
+init_cocoa_protocol_mrb(mrb_state *mrb);
 
 #define MAX_COCOA_MRB_STATE_COUNT 256
 
@@ -68,7 +71,10 @@ void init_cocoa_module(mrb_state *mrb)
         longjmp(*(jmp_buf*)mrb->jmp, 1);
     }
 #else
-    init_cocoa(mrb);
+    init_cocoa_cocoa_mrb(mrb);
+    init_cocoa_object_mrb(mrb);
+    init_cocoa_block_mrb(mrb);
+    init_cocoa_protocol_mrb(mrb);
 #endif
 
 }
