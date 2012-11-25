@@ -12,7 +12,7 @@ struct BridgeSupportStructTable struct_table[] = {
 const double test1 = 12345;
 
 struct BridgeSupportConstTable const_table[] = {
-    {.name = "test1", .type = "d", .value = &test1},
+    {.name = "test1", .type = "d", .value = (void*)&test1},
     {.name = NULL, .type=NULL, .value = NULL}
 };
 

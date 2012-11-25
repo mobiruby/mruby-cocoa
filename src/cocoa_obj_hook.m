@@ -15,6 +15,11 @@
 
 #include "ffi.h"
 
+#define IGNORE_CLASSES \
+    @"Protocol", \
+    @"__IncompleteProtocol"
+
+
 @implementation MrbObjectMap
 @synthesize mrb_obj;
 @end
@@ -38,6 +43,10 @@ static IMP swizzled_release_imp = NULL;
 static SEL release_sel;
 static SEL swizzled_sel;
 static cocoa_st_table *tbl;
+
+static int ignore_classnames_count = 0;
+static Class* ignore_classes = NULL;
+
 
 static
 void swizzle(Class c, SEL orig, SEL patch)
@@ -94,9 +103,16 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
     processing_swizzled_release = false;
 }
 
+
 void cocoa_swizzle_release(id obj)
 {
-    Class klass = [obj class];
+    Class klass = object_getClass(obj);
+    for(int i = 0; i < ignore_classnames_count; ++i) {
+        if(ignore_classes[i] == klass) {
+            return;
+        }
+    }
+
     Method release_method = class_getInstanceMethod(klass, release_sel);
     IMP obj_release = method_getImplementation(release_method);
     
@@ -130,6 +146,17 @@ void cocoa_swizzle_release(id obj)
 
 void init_objc_hook()
 {
+    if(ignore_classes == NULL) {
+        NSArray* ignore_classenames = @[IGNORE_CLASSES];
+        ignore_classnames_count = [ignore_classenames count];
+        ignore_classes = malloc(sizeof(Class*) * ignore_classnames_count);
+        int i = 0;
+        for (NSString* str in ignore_classenames) {
+            ignore_classes[i] = (NSClassFromString(str));
+            ++i;
+        }
+    }
+
     if(swizzled_release_imp == NULL) {
         tbl = cocoa_st_init_table(&hashtype_voidp);
 
