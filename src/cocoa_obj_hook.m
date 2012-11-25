@@ -104,12 +104,12 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
 }
 
 
-void cocoa_swizzle_release(id obj)
+int cocoa_swizzle_release(id obj)
 {
     Class klass = object_getClass(obj);
     for(int i = 0; i < ignore_classnames_count; ++i) {
         if(ignore_classes[i] == klass) {
-            return;
+            return 0;
         }
     }
 
@@ -141,6 +141,8 @@ void cocoa_swizzle_release(id obj)
             cocoa_st_insert(tbl, (cocoa_st_data_t)&obj_release, (cocoa_st_data_t)klass);
         }
     }
+
+    return 1;
 }
 
 

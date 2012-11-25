@@ -113,6 +113,6 @@ cocoa_state(mrb_state* mrb)
 }
 
 
-void cocoa_swizzle_release(id obj);
+int cocoa_swizzle_release(id obj);
 
 #endif

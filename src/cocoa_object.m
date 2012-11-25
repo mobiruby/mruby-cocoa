@@ -50,8 +50,9 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
     data->autofree = false;
     data->autorelease = true;
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
-    cocoa_swizzle_release(pointer);
-    [pointer retain];
+    if(cocoa_swizzle_release(pointer)) {
+        [pointer retain];
+    }
 
     const char *class_name = object_getClassName(pointer);
     struct RClass *klass;
@@ -108,8 +109,9 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     data->autofree = false;
     data->autorelease = true;
     set_cfunc_pointer_data((struct cfunc_type_data *)data, (void*)pointer);
-    cocoa_swizzle_release(pointer);
-    [pointer retain];
+    if(cocoa_swizzle_release(pointer)) {
+        [pointer retain];
+    }
         
     //todo: should verify class
     const char *class_name = object_getClassName(pointer);
@@ -170,8 +172,9 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     data->value._pointer = malloc(sizeof(id));
     *((id*)data->value._pointer) = obj;
 
-    cocoa_swizzle_release(obj);
-    [obj retain];
+    if(cocoa_swizzle_release(obj)) {
+        [obj retain];
+    }
 
     const char *class_name = object_getClassName(obj);
     struct RClass *klass2;
