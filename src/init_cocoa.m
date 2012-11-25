@@ -21,20 +21,37 @@
 
 #ifdef USE_MRBC_DATA
 extern const char mruby_data_cocoa[];
-#endif
-
-size_t cocoa_state_offset = 0;
-
-// generate from mrb/cfunc_rb.rb
+extern const char mruby_data_object[];
+extern const char mruby_data_block[];
+extern const char mruby_data_protocol[];
+#else
 void init_cocoa_cocoa_mrb(mrb_state *mrb);
 void init_cocoa_object_mrb(mrb_state *mrb);
 void init_cocoa_block_mrb(mrb_state *mrb);
 void init_cocoa_protocol_mrb(mrb_state *mrb);
+#endif
+
+size_t cocoa_state_offset = 0;
+
 
 #define MAX_COCOA_MRB_STATE_COUNT 256
 
 mrb_state **cocoa_mrb_states = NULL;
 int cocoa_vm_count = 0;
+
+static void load_irep(mrb_state* mrb, const const char* data)
+{
+    int n = mrb_read_irep(mrb, data);
+    if (n >= 0) {
+        mrb_irep *irep = mrb->irep[n];
+        struct RProc *proc = mrb_proc_new(mrb, irep);
+        proc->target_class = mrb->object_class;
+        mrb_run(mrb, proc, mrb_nil_value());
+    }
+    else if (mrb->exc) {
+        longjmp(*(jmp_buf*)mrb->jmp, 1);
+    }
+}
 
 void init_cocoa_module(mrb_state *mrb)
 {
@@ -59,16 +76,10 @@ void init_cocoa_module(mrb_state *mrb)
     init_cocoa_bridge_support(mrb);
 
 #ifdef USE_MRBC_DATA
-    int n = mrb_read_irep(mrb, mruby_data_cocoa);
-    if (n >= 0) {
-        mrb_irep *irep = mrb->irep[n];
-        struct RProc *proc = mrb_proc_new(mrb, irep);
-        proc->target_class = mrb->object_class;
-        mrb_run(mrb, proc, mrb_nil_value());
-    }
-    else if (mrb->exc) {
-        longjmp(*(jmp_buf*)mrb->jmp, 1);
-    }
+    load_irep(mrb, mruby_data_cocoa);
+    load_irep(mrb, mruby_data_object);
+    load_irep(mrb, mruby_data_block);
+    load_irep(mrb, mruby_data_protocol);
 #else
     init_cocoa_cocoa_mrb(mrb);
     init_cocoa_object_mrb(mrb);
