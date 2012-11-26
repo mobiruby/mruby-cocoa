@@ -272,6 +272,32 @@ cocoa_object_class_objc_addMethod(mrb_state *mrb, mrb_value klass)
 }
 
 
+/*
+ * call-seq:
+ *  addClassMethod(selector, proc, encoded_args)
+ *
+ * Define a method to ObjC class with Ruby's proc
+ */
+static mrb_value
+cocoa_object_class_objc_addClassMethod(mrb_state *mrb, mrb_value klass)
+{
+    mrb_value rb_method_name, rb_proc, rb_params;
+
+    mrb_get_args(mrb, "ooo", &rb_method_name, &rb_proc, &rb_params);
+    
+    char *params = mrb_string_value_ptr(mrb, rb_params);
+    char *method_name = mrb_string_value_ptr(mrb, rb_method_name);
+    SEL sel = sel_registerName(method_name);
+    
+    Class objc_klass = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
+
+    void *closure = cfunc_closure_data_pointer(mrb, rb_proc);
+    class_addMethod(object_getClass(objc_klass), sel, closure, params);
+    
+    return mrb_nil_value();
+}
+
+
 #define SELF_AND_SEL (2)
 /*
  * call-seq:
@@ -588,6 +614,7 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
 
     mrb_define_class_method(mrb, object_class, "refer", cocoa_object_class_refer, ARGS_REQ(2));
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
+    mrb_define_class_method(mrb, object_class, "objc_addClassMethod", cocoa_object_class_objc_addClassMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_msgSend", cocoa_object_class_objc_msgSend, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "protocol", cocoa_object_class_protocol, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "new", cocoa_object_class_new, ARGS_REQ(1));

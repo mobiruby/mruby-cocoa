@@ -7,17 +7,24 @@ class Cocoa::MobiCocoaTest2 < Cocoa::MobiCocoaTest1
   define CFunc::Int, :ruby_method2, CFunc::Int do |i|
     i.value ** 2
   end
+
+  define_class CFunc::Int, :ruby_method3, CFunc::Int do |i|
+    i.value ** 3
+  end
 end
   
 # call rubymethod1
 test2 = Cocoa::MobiCocoaTest2._alloc._init
 assert test2.is_a?(Cocoa::Object)
-assert_equal 1, test2._ruby_method1.value
+assert_equal 1, test2._ruby_method1.to_i
 
 # call rubymethod
 test2 = Cocoa::MobiCocoaTest2._alloc._init
-# TODO
+assert test2.is_a?(Cocoa::Object)
+assert_equal 9, test2._ruby_method2(3).to_i
 
+# call class method
+assert_equal 27, Cocoa::MobiCocoaTest2._ruby_method3(3).to_i
 
 ############
 # BEGIN C
