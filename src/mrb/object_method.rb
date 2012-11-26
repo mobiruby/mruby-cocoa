@@ -74,7 +74,7 @@ class Cocoa::Object
     if '_' == name.to_s[0, 1]
       return call_cocoa_method(:self, self, name.to_s[1..-1], *args, &block)
     else
-      raise "Unknow method #{name}"
+      raise "Unknown method #{name}"
     end
   end
 
@@ -82,7 +82,7 @@ class Cocoa::Object
     if '_' == name.to_s[0, 1]
       return self.class.call_cocoa_method(:self, self, name.to_s[1..-1], *args, &block)
     else
-      raise "Unknow method #{name}"
+      raise "Unknown method #{name}"
     end
   end
 
@@ -90,7 +90,7 @@ class Cocoa::Object
     if '_' == name.to_s[0, 1]
       return call_cocoa_method(:super, self, name.to_s[1..-1], *args, &block)
     else
-      raise "Unknow method #{name}"
+      raise "Unknown method #{name}"
     end
   end
 
@@ -98,7 +98,7 @@ class Cocoa::Object
     if '_' == name.to_s[0, 1]
       return self.class.call_cocoa_method(:super, self, name.to_s[1..-1], *args, &block)
     else
-      raise "Unknow method #{name}"
+      raise "Unknown method #{name}"
     end
   end
 

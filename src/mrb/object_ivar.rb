@@ -1,0 +1,3 @@
+class Cocoa::Object
+  
+end
