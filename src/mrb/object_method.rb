@@ -1,5 +1,3 @@
-$mobiruby_obj_holder = []
-
 $closure = []
 
 class Cocoa::Object
