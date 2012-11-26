@@ -17,7 +17,7 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [ ] access to instance variables
 - [ ] declare property
 - [x] use property
-- [ ] define protocol
+- [x] define protocol
 - [x] define protocol - parent protocols
 - [x] define protocol - instance method
 - [x] define protocol - class method
