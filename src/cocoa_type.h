@@ -19,4 +19,7 @@ struct cocoa_type_data {
 mrb_value
 objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type);
 
+void
+init_cocoa_module_type(mrb_state *mrb, struct RClass* module);
+
 #endif

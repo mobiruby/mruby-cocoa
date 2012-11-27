@@ -9,6 +9,7 @@
 #include "cocoa_block.h"
 #include "cocoa_obj_hook.h"
 #include "cocoa_bridgesupport.h"
+#include "cocoa_type.h"
 
 #include "mruby.h"
 #include "mruby/class.h"
@@ -45,7 +46,9 @@ size_t cocoa_state_offset = 0;
 mrb_state **cocoa_mrb_states = NULL;
 int cocoa_vm_count = 0;
 
-static void load_irep(mrb_state* mrb, const const char* data)
+#ifdef USE_MRBC_DATA
+static
+void load_irep(mrb_state* mrb, const const char* data)
 {
     int n = mrb_read_irep(mrb, data);
     if (n >= 0) {
@@ -58,6 +61,7 @@ static void load_irep(mrb_state* mrb, const const char* data)
         longjmp(*(jmp_buf*)mrb->jmp, 1);
     }
 }
+#endif
 
 void init_cocoa_module(mrb_state *mrb)
 {
@@ -77,6 +81,7 @@ void init_cocoa_module(mrb_state *mrb)
     cocoa_state(mrb)->namespace = ns;
 
     init_objc_hook();
+    init_cocoa_module_type(mrb, ns);
     init_cocoa_object(mrb, ns);
     init_cocoa_block(mrb, ns);
     init_cocoa_bridge_support(mrb);

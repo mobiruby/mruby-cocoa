@@ -198,3 +198,25 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
     return mrb_nil_value();
 }
 
+
+static mrb_value
+cocoa_module_encode_to_type(mrb_state *mrb, mrb_value klass)
+{
+    mrb_value encode_rb;
+
+    mrb_get_args(mrb, "o", &encode_rb);
+    char *encode = mrb_string_value_ptr(mrb, encode_rb);
+
+    return objc_type_to_cfunc_type(mrb, encode);
+}
+
+
+/*
+ * initialize function
+ */
+void
+init_cocoa_module_type(mrb_state *mrb, struct RClass* module)
+{
+    struct RClass *object_class = mrb_define_class_under(mrb, module, "Object", cfunc_state(mrb)->pointer_class);
+    mrb_define_class_method(mrb, module, "encode_to_type", cocoa_module_encode_to_type, ARGS_REQ(1));
+}

@@ -1,3 +1,6 @@
+def _S(str)
+  Cocoa::NSString._stringWithUTF8String(str)
+end
 
 # call class method
 result1 = Cocoa::MobiCocoaTest1._classMethod1
@@ -50,9 +53,26 @@ test1 = Cocoa::MobiCocoaTest1._alloc._init
 result = test1._testBlocks2 block
 assert_equal 12, result.value
 
+# instance variable - int
+test1 = Cocoa::MobiCocoaTest1._alloc._init
+ivar_i = test1.ivar[:i]
+assert_equal 0, ivar_i.to_i
+
+result = test1._set_i(CFunc::Int(-128))
+assert_equal -128, test1.ivar[:i].to_i
+
+test1.ivar[:i] = -256
+assert_equal -256, test1.ivar[:i].to_i
+
+# instance variable - object
+#test1.ivar[:obj] = _S("Test")
+obj = test1.ivar[:obj]
+assert_equal "Test", obj._UTF8String.to_s
+
 
 ############
 # BEGIN C
+#include <objc/runtime.h>
 
 struct BridgeSupportStructTable struct_table[] = {
     {.name = "CGPoint", .definition = "x:f:y:f"},
@@ -90,6 +110,8 @@ struct MobiCocoaStruct2 {
 @interface MobiCocoaTest1 : NSObject {
     NSString *prop2;
     struct MobiCocoaStruct1 struct1;
+    int i;
+    id obj;
 }
 @property(retain,getter=prop1_,readonly) NSString *prop1;
 @property(retain) NSString *prop2;
@@ -142,6 +164,12 @@ struct MobiCocoaStruct2 {
 - (NSString*)intToString:(int)value
 {
     return [NSString stringWithFormat: @"value=%d", value];
+}
+
+- (void)set_i:(int)value
+{
+    i = value;
+    obj = @"Test";
 }
 
 - (NSString*)uint16ToString:(unsigned short)value
