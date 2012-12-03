@@ -15,6 +15,7 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [x] define instance method
 - [x] define class method
 - [x] access to instance variables
+- [ ] declare instance variables
 - [ ] declare property
 - [x] use property
 - [x] define protocol
@@ -24,6 +25,7 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [ ] define protocol - define property
 - [x] adopt protocol
 - [ ] handle exception
+- [ ] research NSCopy
 
 
 ## Todo
@@ -47,5 +49,5 @@ Original Authors "MobiRuby developers" are [https://github.com/mobiruby/mobiruby
 
 ## License
 
-See Copyright Notice in [cocoa.h](https://github.com/mobiruby/mruby-cfunc/blob/master/include/cocoa.h).
+See Copyright Notice in [cocoa.h](https://github.com/mobiruby/mruby-cocoa/blob/master/include/cocoa.h).
 
