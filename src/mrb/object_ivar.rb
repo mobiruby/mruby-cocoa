@@ -14,7 +14,7 @@ class Cocoa::Object
       else
         type.refer(ptr.to_pointer)
       end
-   end
+    end
 
     def []=(name, val_rb)
       ptr = CFunc::Pointer.new
@@ -22,7 +22,7 @@ class Cocoa::Object
       encode = CFunc::call(CFunc::Pointer, "ivar_getTypeEncoding", ivar).to_s
       type = Cocoa::encode_to_type(encode)
       if type.ancestors.include?(CFunc::Pointer)
-        val = type.new(ptr)
+        val = val_rb
       else
         val = type.refer(ptr.to_pointer)
         val.value = val_rb
