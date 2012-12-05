@@ -11,6 +11,9 @@ class Cocoa::MobiCocoaTest2 < Cocoa::MobiCocoaTest1
     i.value ** 3
   end
 end
+assert !Cocoa::Object.exists_cocoa_class?(:MobiCocoaTest2)
+Cocoa::MobiCocoaTest2.register
+assert Cocoa::Object.exists_cocoa_class?(:MobiCocoaTest2)
   
 # call rubymethod1
 test2 = Cocoa::MobiCocoaTest2._alloc._init

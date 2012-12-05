@@ -24,21 +24,6 @@
 @synthesize mrb_obj;
 @end
 
-cocoa_st_index_t hash_voidp(void *key)
-{
-    return (cocoa_st_index_t)key;
-}
-
-int hash_voidp_compare(void *x, void *y)
-{
-    return x != y;
-}
-
-const struct cocoa_st_hash_type hashtype_voidp = {
-    hash_voidp_compare,
-    hash_voidp,
-};
-
 static IMP swizzled_release_imp = NULL;
 static SEL release_sel;
 static SEL swizzled_sel;
@@ -160,7 +145,7 @@ void init_objc_hook()
     }
 
     if(swizzled_release_imp == NULL) {
-        tbl = cocoa_st_init_table(&hashtype_voidp);
+        tbl = cocoa_st_init_pointertable();
 
         swizzled_sel = @selector(mruby_cocoa_release);
         release_sel = @selector(release);

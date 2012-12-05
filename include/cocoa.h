@@ -30,7 +30,7 @@
 
 #include "mruby.h"
 #include "cfunc.h"
-
+struct cocoa_st_table;
 
 struct BridgeSupportStructTable
 {
@@ -68,6 +68,8 @@ struct cocoa_state {
 
     mrb_sym sym_obj_holder;
     mrb_sym sym_delete;
+    
+    struct cocoa_st_table *cocoa_classes;
 };
 
 

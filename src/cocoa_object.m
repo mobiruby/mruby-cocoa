@@ -7,6 +7,7 @@
 #include "cocoa.h"
 #include "cocoa_object.h"
 #include "cocoa_type.h"
+#include "cocoa_st.h"
 #include "cocoa_obj_hook.h"
 #include "cfunc_pointer.h"
 #include "cfunc_type.h"
@@ -210,6 +211,11 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 static Class
 mruby_class_to_objc_class(mrb_state *mrb, struct RClass *klass)
 {
+    Class objc_class;
+    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)klass, (void*)&objc_class)) {
+        return objc_class;
+    }
+
     const char *class_name = mrb_class_name(mrb, klass);
     if(strncmp(class_name, "Cocoa::", 7)==0) {
         //mrb_raisef(mrb, E_NAME_ERROR, "%s is not cocoa class", class_name);
@@ -473,10 +479,11 @@ cocoa_object_class_inherited(mrb_state *mrb, mrb_value klass)
         }
         class_name += 7; // todo
         Class super_class = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
-        Class new_class = objc_allocateClassPair(super_class, class_name, 0);
-        objc_registerClassPair(new_class);
-    }
+        objc_klass = objc_allocateClassPair(super_class, class_name, 0);
 
+        cocoa_st_insert(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(subclass), (cocoa_st_data_t)objc_klass);
+    }
+    
     return mrb_nil_value();
 }
 
@@ -525,6 +532,7 @@ cocoa_object_destructor(mrb_state *mrb, void *p)
     }
     free(p);
 }
+
 
 mrb_value
 cocoa_class_exists_cocoa_class(mrb_state *mrb, mrb_value klass)
@@ -593,6 +601,19 @@ cocoa_object_class_protocol(mrb_state *mrb, mrb_value klass)
     return klass;
 }
 
+
+mrb_value
+cocoa_class_register(mrb_state *mrb, mrb_value klass)
+{
+    Class objc_class;
+    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
+        objc_registerClassPair(objc_class);
+    }
+    
+    return klass;
+}
+
+
 /*
  * internal data
  */
@@ -611,6 +632,7 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     cocoa_state(mrb)->object_class = object_class;
     cocoa_state(mrb)->sym_obj_holder = mrb_intern(mrb, "$mobiruby_obj_holder");
     cocoa_state(mrb)->sym_delete = mrb_intern(mrb, "delete");
+    cocoa_state(mrb)->cocoa_classes = cocoa_st_init_pointertable();
 
     mrb_define_class_method(mrb, object_class, "refer", cocoa_object_class_refer, ARGS_REQ(2));
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
@@ -622,6 +644,8 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
 
     mrb_define_class_method(mrb, object_class, "load_cocoa_class", cocoa_class_load_cocoa_class, ARGS_REQ(1));
     mrb_define_class_method(mrb, object_class, "exists_cocoa_class?", cocoa_class_exists_cocoa_class, ARGS_REQ(1));
+
+    mrb_define_class_method(mrb, object_class, "register", cocoa_class_register, ARGS_NONE());
 
     mrb_define_class_method(mrb, object_class, "inherited", cocoa_object_class_inherited, ARGS_REQ(1));
     mrb_define_method(mrb, object_class, "objc_property_getAttributes", cocoa_object_class_objc_property_getAttributes, ARGS_ANY());

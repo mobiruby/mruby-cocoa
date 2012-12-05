@@ -70,6 +70,8 @@ cocoa_st_table *cocoa_st_init_strtable(void);
 cocoa_st_table *cocoa_st_init_strtable_with_size(int);
 cocoa_st_table *cocoa_st_init_strcasetable(void);
 cocoa_st_table *cocoa_st_init_strcasetable_with_size(cocoa_st_index_t);
+cocoa_st_table *cocoa_st_init_pointertable(void);
+cocoa_st_table *cocoa_st_init_pointertable_with_size(cocoa_st_index_t);
 int cocoa_st_delete(cocoa_st_table *, cocoa_st_data_t *, cocoa_st_data_t *);
 int cocoa_st_delete_safe(cocoa_st_table *, cocoa_st_data_t *, cocoa_st_data_t *, cocoa_st_data_t);
 int cocoa_st_insert(cocoa_st_table *, cocoa_st_data_t, cocoa_st_data_t);

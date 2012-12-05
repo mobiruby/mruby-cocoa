@@ -41,6 +41,14 @@ static const struct cocoa_st_hash_type type_strcasehash = {
     (cocoa_st_index_t (*)(ANYARGS))strcasehash,
 };
 
+static int pointercmp(void*, void*);
+static cocoa_st_index_t pointerhash(cocoa_st_data_t);
+static const struct cocoa_st_hash_type type_pointerhash = {
+    (int (*)(ANYARGS))pointercmp,
+    (cocoa_st_index_t (*)(ANYARGS))pointerhash,
+};
+
+
 static void rehash(cocoa_st_table*);
 
 #ifdef RUBY
@@ -180,6 +188,19 @@ cocoa_st_init_strcasetable_with_size(cocoa_st_index_t size)
 {
     return cocoa_st_init_table_with_size(&type_strcasehash, size);
 }
+
+cocoa_st_table*
+cocoa_st_init_pointertable(void)
+{
+    return cocoa_st_init_table(&type_pointerhash);
+}
+
+cocoa_st_table*
+cocoa_st_init_pointertable_with_size(cocoa_st_index_t size)
+{
+    return cocoa_st_init_table_with_size(&type_pointerhash, size);
+}
+
 
 void
 cocoa_st_clear(cocoa_st_table *table)
@@ -570,6 +591,18 @@ numhash(long n)
 {
     return n;
 }
+
+static int pointercmp(void* x, void* y)
+{
+    return x != y;
+}
+
+static cocoa_st_index_t
+pointerhash(cocoa_st_data_t n)
+{
+    return n;
+}
+
 
 #if 0
 static enum cocoa_st_retval
