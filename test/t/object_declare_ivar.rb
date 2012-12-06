@@ -12,7 +12,7 @@ end
 # instance variable - int
 test1 = Cocoa::MobiCocoaTest1._alloc._init
 
-test1.ivar[:i] = CFunc::Int(-256)
+test1.ivar[:i] = -256
 assert_equal -256, test1.ivar[:i].to_i
 
 # instance variable - object
