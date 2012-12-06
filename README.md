@@ -15,8 +15,8 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [x] define instance method
 - [x] define class method
 - [x] access to instance variables
-- [ ] declare instance variables
-- [ ] declare property
+- [x] declare instance variables
+- [x] declare property
 - [x] use property
 - [x] define protocol
 - [x] define protocol - parent protocols
@@ -25,7 +25,7 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [ ] define protocol - define property
 - [x] adopt protocol
 - [ ] handle exception
-- [ ] research NSCopy
+- [ ] research NSCopying
 
 
 ## Todo
