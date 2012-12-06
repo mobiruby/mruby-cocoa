@@ -614,6 +614,18 @@ cocoa_class_register(mrb_state *mrb, mrb_value klass)
 }
 
 
+mrb_value
+cocoa_class_to_pointer(mrb_state *mrb, mrb_value klass)
+{
+    Class objc_class;
+    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
+        return cfunc_pointer_new_with_pointer(mrb, objc_class, 0);
+    }
+    
+    return mrb_nil_value();
+}
+
+
 /*
  * internal data
  */
@@ -646,6 +658,8 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     mrb_define_class_method(mrb, object_class, "exists_cocoa_class?", cocoa_class_exists_cocoa_class, ARGS_REQ(1));
 
     mrb_define_class_method(mrb, object_class, "register", cocoa_class_register, ARGS_NONE());
+    mrb_define_class_method(mrb, object_class, "to_pointer", cocoa_class_to_pointer, ARGS_NONE());
+
 
     mrb_define_class_method(mrb, object_class, "inherited", cocoa_object_class_inherited, ARGS_REQ(1));
     mrb_define_method(mrb, object_class, "objc_property_getAttributes", cocoa_object_class_objc_property_getAttributes, ARGS_ANY());

@@ -1,4 +1,8 @@
 class Cocoa::Object
+  def self.ivar(name, type)
+    CFunc::call(CFunc::Int, "class_addIvar", self.to_pointer, name.to_s, CFunc::Int(type.size), CFunc::Int(type.align), type.objc_type_encode)
+  end
+
   class Ivar
     def initialize(instance)
       @instance = instance
