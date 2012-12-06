@@ -59,16 +59,16 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
         
     while(*encode) {
         switch(*encode) {
-        case_type('c', sint8_class);
-        case_type('i', sint32_class);
-        case_type('s', sint16_class);
-        case_type('l', sint64_class);
-        case_type('q', sint64_class); // todo:dosen't support long long
+        case_type('c', sint8_class); // char
+        case_type('i', sint32_class); // int
+        case_type('s', sint16_class); // short
+        case_type('l', sint32_class); // long
+        case_type('q', sint64_class); // long long
         case_type('C', uint8_class);
         case_type('I', uint32_class);
         case_type('S', uint16_class);
         case_type('L', uint64_class);
-        case_type('Q', uint64_class); // todo:dosen't support unsigned long long
+        case_type('Q', uint64_class);
         case_type('f', float_class);
         case_type('d', double_class);
         case_type('B', uint8_class); // TODO: bit field

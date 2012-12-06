@@ -1,4 +1,3 @@
-if false
 class Cocoa::MobiCocoaTest1 < Cocoa::NSObject 
   attr_accessor :prop1, :prop2, :prop3, :prop3_, :prop4, :prop4_
   property :prop1, CFunc::Int
@@ -82,5 +81,3 @@ result = test1[:prop4]
 assert_equal "PROP4_", result._UTF8String.to_s
 assert_equal "PROP4_", test1.prop4_
 assert_equal nil, test1.prop4
-
-end

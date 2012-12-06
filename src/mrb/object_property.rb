@@ -41,7 +41,6 @@ class Cocoa::Object
       end
     end
     
-    # todo
     if options.has_key?(:getter)
       options[:getter] = options[:getter].to_s
     else
@@ -57,7 +56,8 @@ class Cocoa::Object
         # todo: define objc getter method
       end
     end
- #p name
+
+    nil
     # create property attributes
     # declare property
   end
