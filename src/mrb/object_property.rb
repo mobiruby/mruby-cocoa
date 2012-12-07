@@ -1,5 +1,3 @@
-# todo: define String#capitalize
-
 class Cocoa::Object
   def objc_property(prop_name)
     prop_name = prop_name.to_s
@@ -26,8 +24,6 @@ class Cocoa::Object
     value
   end
 
-  # 
-  # 
   # options: :copy, :readonly, :weak, :setter => xxx, :getter => xxx, :ivar => :xxx
   def self.property(name, type, *options_)
     options = {}
@@ -57,8 +53,8 @@ class Cocoa::Object
       end
     end
 
-    nil
     # create property attributes
     # declare property
+    nil
   end
 end

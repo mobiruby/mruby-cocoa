@@ -29,6 +29,7 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
+#define DONE mrb_gc_arena_restore(mrb, 0);
 
 static struct mrb_data_type cocoa_object_data_type;
 
@@ -646,23 +647,30 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     cocoa_state(mrb)->sym_delete = mrb_intern(mrb, "delete");
     cocoa_state(mrb)->cocoa_classes = cocoa_st_init_pointertable();
 
-    mrb_define_class_method(mrb, object_class, "refer", cocoa_object_class_refer, ARGS_REQ(2));
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_addClassMethod", cocoa_object_class_objc_addClassMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_msgSend", cocoa_object_class_objc_msgSend, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "protocol", cocoa_object_class_protocol, ARGS_ANY());
+    DONE;
+
+    mrb_define_class_method(mrb, object_class, "refer", cocoa_object_class_refer, ARGS_REQ(2));
     mrb_define_class_method(mrb, object_class, "new", cocoa_object_class_new, ARGS_REQ(1));
     mrb_define_class_method(mrb, object_class, "set", cocoa_object_class_set, ARGS_REQ(2));
-
+    DONE;
+    
     mrb_define_class_method(mrb, object_class, "load_cocoa_class", cocoa_class_load_cocoa_class, ARGS_REQ(1));
     mrb_define_class_method(mrb, object_class, "exists_cocoa_class?", cocoa_class_exists_cocoa_class, ARGS_REQ(1));
+    DONE;
 
     mrb_define_class_method(mrb, object_class, "register", cocoa_class_register, ARGS_NONE());
     mrb_define_class_method(mrb, object_class, "to_pointer", cocoa_class_to_pointer, ARGS_NONE());
-
+    DONE;
 
     mrb_define_class_method(mrb, object_class, "inherited", cocoa_object_class_inherited, ARGS_REQ(1));
+    DONE;
+
     mrb_define_method(mrb, object_class, "objc_property_getAttributes", cocoa_object_class_objc_property_getAttributes, ARGS_ANY());
     mrb_define_method(mrb, object_class, "objc_msgSend", cocoa_object_objc_msgSend, ARGS_ANY());
     mrb_define_method(mrb, object_class, "inspect", cocoa_object_inspect, ARGS_NONE());
+    DONE;
 }

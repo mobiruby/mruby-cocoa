@@ -20,23 +20,13 @@
 #include <setjmp.h>
 #include "ffi.h"
 
-#ifdef USE_MRBC_DATA
-extern const char mruby_data_cocoa[];
-extern const char mruby_data_object[];
-extern const char mruby_data_object_property[];
-extern const char mruby_data_object_method[];
-extern const char mruby_data_object_ivar[];
-extern const char mruby_data_block[];
-extern const char mruby_data_protocol[];
-#else
-void init_cocoa_cocoa_mrb(mrb_state *mrb);
-void init_cocoa_object_mrb(mrb_state *mrb);
-void init_cocoa_object_property_mrb(mrb_state *mrb);
-void init_cocoa_object_method_mrb(mrb_state *mrb);
-void init_cocoa_object_ivar_mrb(mrb_state *mrb);
-void init_cocoa_block_mrb(mrb_state *mrb);
-void init_cocoa_protocol_mrb(mrb_state *mrb);
-#endif
+extern const char mruby_cocoa_data_cocoa[];
+extern const char mruby_cocoa_data_object[];
+extern const char mruby_cocoa_data_object_property[];
+extern const char mruby_cocoa_data_object_method[];
+extern const char mruby_cocoa_data_object_ivar[];
+extern const char mruby_cocoa_data_block[];
+extern const char mruby_cocoa_data_protocol[];
 
 size_t cocoa_state_offset = 0;
 
@@ -46,7 +36,6 @@ size_t cocoa_state_offset = 0;
 mrb_state **cocoa_mrb_states = NULL;
 int cocoa_vm_count = 0;
 
-#ifdef USE_MRBC_DATA
 static
 void load_irep(mrb_state* mrb, const const char* data)
 {
@@ -61,7 +50,6 @@ void load_irep(mrb_state* mrb, const const char* data)
         longjmp(*(jmp_buf*)mrb->jmp, 1);
     }
 }
-#endif
 
 void init_cocoa_module(mrb_state *mrb)
 {
@@ -86,24 +74,13 @@ void init_cocoa_module(mrb_state *mrb)
     init_cocoa_block(mrb, ns);
     init_cocoa_bridge_support(mrb);
 
-#ifdef USE_MRBC_DATA
-    load_irep(mrb, mruby_data_cocoa);
-    load_irep(mrb, mruby_data_object);
-    load_irep(mrb, mruby_data_object_property);
-    load_irep(mrb, mruby_data_object_method);
-    load_irep(mrb, mruby_data_object_ivar);
-    load_irep(mrb, mruby_data_block);
-    load_irep(mrb, mruby_data_protocol);
-#else
-    init_cocoa_cocoa_mrb(mrb);
-    init_cocoa_object_mrb(mrb);
-    init_cocoa_object_property_mrb(mrb);
-    init_cocoa_object_method_mrb(mrb);
-    init_cocoa_object_ivar_mrb(mrb);
-    init_cocoa_block_mrb(mrb);
-    init_cocoa_protocol_mrb(mrb);
-#endif
-
+    load_irep(mrb, mruby_cocoa_data_cocoa);
+    load_irep(mrb, mruby_cocoa_data_object);
+    load_irep(mrb, mruby_cocoa_data_object_property);
+    load_irep(mrb, mruby_cocoa_data_object_method);
+    load_irep(mrb, mruby_cocoa_data_object_ivar);
+    load_irep(mrb, mruby_cocoa_data_block);
+    load_irep(mrb, mruby_cocoa_data_protocol);
 }
 
 void close_cocoa_module(mrb_state *mrb)
