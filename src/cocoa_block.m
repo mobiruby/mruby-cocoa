@@ -48,7 +48,7 @@ objc_block_descriptor = {
 
 
 static mrb_value
-cocoa_block_to_pointer(mrb_state *mrb, mrb_value self)
+cocoa_block_addr(mrb_state *mrb, mrb_value self)
 {
     struct objc_block_literal **bl = malloc(sizeof(struct objc_block_literal *));
     *bl = malloc(sizeof(struct objc_block_literal));
@@ -94,5 +94,5 @@ init_cocoa_block(mrb_state *mrb, struct RClass* module)
     struct RClass *block_class = mrb_define_class_under(mrb, module, "Block", cfunc_state(mrb)->closure_class);
     cocoa_state(mrb)->block_class = block_class;
 
-    mrb_define_method(mrb, block_class, "to_pointer", cocoa_block_to_pointer, ARGS_NONE());
+    mrb_define_method(mrb, block_class, "addr", cocoa_block_addr, ARGS_NONE());
 }

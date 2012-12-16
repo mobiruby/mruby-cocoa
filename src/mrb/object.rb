@@ -91,9 +91,9 @@ class String
   def self.objc_type_encode; '*'; end
   def to_ffi_value(ffi_type)
     if ffi_type == Cocoa::Object
-      Cocoa::NSString._stringWithUTF8String(self).to_pointer
+      Cocoa::NSString._stringWithUTF8String(self).addr
     else
-      self.to_pointer
+      self.addr
     end
   end
 end

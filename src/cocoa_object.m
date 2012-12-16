@@ -616,7 +616,7 @@ cocoa_class_register(mrb_state *mrb, mrb_value klass)
 
 
 mrb_value
-cocoa_class_to_pointer(mrb_state *mrb, mrb_value klass)
+cocoa_class_addr(mrb_state *mrb, mrb_value klass)
 {
     Class objc_class;
     if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
@@ -663,7 +663,7 @@ init_cocoa_object(mrb_state *mrb, struct RClass* module)
     DONE;
 
     mrb_define_class_method(mrb, object_class, "register", cocoa_class_register, ARGS_NONE());
-    mrb_define_class_method(mrb, object_class, "to_pointer", cocoa_class_to_pointer, ARGS_NONE());
+    mrb_define_class_method(mrb, object_class, "addr", cocoa_class_addr, ARGS_NONE());
     DONE;
 
     mrb_define_class_method(mrb, object_class, "inherited", cocoa_object_class_inherited, ARGS_REQ(1));
