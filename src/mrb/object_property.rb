@@ -24,6 +24,10 @@ class Cocoa::Object
     value
   end
 
+  class PropAttr < CFunc::Struct
+    define CFunc::Pointer, :name, CFunc::Pointer, :value
+  end
+
   # options: :copy, :readonly, :weak, :setter => xxx, :getter => xxx, :ivar => :xxx
   def self.property(name, type, *options_)
     options = {}

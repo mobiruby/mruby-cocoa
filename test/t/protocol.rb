@@ -22,7 +22,7 @@ outCount = CFunc::Int.new
 
 
 # struct objc_method_description *protocol_copyMethodDescriptionList(Protocol *p, BOOL isRequiredMethod, BOOL isInstanceMethod, unsigned int *outCount)
-required_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, true, true, outCount.to_pointer)
+required_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, true, true, outCount.addr)
 assert !required_instance_methods.is_null?
 assert_equal 2, outCount.to_i
 assert_equal "foo1", required_instance_methods[0][:sel].to_s
@@ -30,19 +30,19 @@ assert_equal "v:@", required_instance_methods[0][:types].to_s
 assert_equal "foo3", required_instance_methods[1][:sel].to_s
 assert_equal "v:@", required_instance_methods[1][:types].to_s
 
-required_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, true, false, outCount.to_pointer)
+required_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, true, false, outCount.addr)
 assert !required_class_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo1_class", required_class_methods[0][:sel].to_s
 assert_equal "v:@", required_class_methods[0][:types].to_s
 
-optional_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, false, true, outCount.to_pointer)
+optional_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, false, true, outCount.addr)
 assert !optional_instance_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo2", optional_instance_methods[0][:sel].to_s
 assert_equal "v:@", optional_instance_methods[0][:types].to_s
 
-optional_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, false, false, outCount.to_pointer)
+optional_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto1, false, false, outCount.addr)
 assert !optional_class_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo2_class", optional_class_methods[0][:sel].to_s
@@ -68,7 +68,7 @@ proto2 = CFunc::call(Cocoa::Object, "objc_getProtocol", "Proto2")
 assert 1, CFunc::call(CFunc::Int, "protocol_conformsToProtocol", proto2, proto1).to_i
 
 
-required_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, true, true, outCount.to_pointer)
+required_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, true, true, outCount.addr)
 assert !required_instance_methods.is_null?
 assert_equal 2, outCount.to_i
 assert_equal "foo1a", required_instance_methods[0][:sel].to_s
@@ -76,19 +76,19 @@ assert_equal "v:@", required_instance_methods[0][:types].to_s
 assert_equal "foo3a", required_instance_methods[1][:sel].to_s
 assert_equal "v:@", required_instance_methods[1][:types].to_s
 
-required_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, true, false, outCount.to_pointer)
+required_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, true, false, outCount.addr)
 assert !required_class_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo1a_class", required_class_methods[0][:sel].to_s
 assert_equal "v:@", required_class_methods[0][:types].to_s
 
-optional_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, false, true, outCount.to_pointer)
+optional_instance_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, false, true, outCount.addr)
 assert !optional_instance_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo2a", optional_instance_methods[0][:sel].to_s
 assert_equal "v:@", optional_instance_methods[0][:types].to_s
 
-optional_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, false, false, outCount.to_pointer)
+optional_class_methods = CFunc::call(CFunc::Pointer(Objc_method_description), "protocol_copyMethodDescriptionList", proto2, false, false, outCount.addr)
 assert !optional_class_methods.is_null?
 assert_equal 1, outCount.to_i
 assert_equal "foo2a_class", optional_class_methods[0][:sel].to_s
