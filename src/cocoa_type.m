@@ -32,7 +32,7 @@
 
 #define case_type(encode, tclass) \
         case encode: \
-            return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->tclass, pointer_count);
+            return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->tclass, pointer_count);
 
 
 static mrb_value
@@ -41,7 +41,7 @@ cfunc_type_with_pointer(mrb_state *mrb, struct RClass *type_rclass, int pointer_
     mrb_value type_class = mrb_obj_value(type_rclass);
 
     if(pointer_count > 0) {
-        mrb_value cfunc_module = mrb_obj_value(cfunc_state(mrb)->namespace);
+        mrb_value cfunc_module = mrb_obj_value(cfunc_state(mrb, NULL)->namespace);
         for(int i = 0; i < pointer_count; ++i) {
             type_class = mrb_funcall(mrb, cfunc_module, "Pointer", 1, type_class);
         }
@@ -80,23 +80,23 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
             break;
 
         case '*': // CString
-            return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->pointer_class, pointer_count);
+            return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->pointer_class, pointer_count);
 
         case '@': // id(Object)
             if(*(encode+1) == '?') { // block
-                return cfunc_type_with_pointer(mrb, cocoa_state(mrb)->block_class, pointer_count);
+                return cfunc_type_with_pointer(mrb, cocoa_state(mrb, NULL)->block_class, pointer_count);
             }
             if(*(encode+1) == '"') {
                 encode += 2;
                 for(; *encode != '"'; ++encode) { /* no op */ }
             }
-            return cfunc_type_with_pointer(mrb, cocoa_state(mrb)->object_class, pointer_count);
+            return cfunc_type_with_pointer(mrb, cocoa_state(mrb, NULL)->object_class, pointer_count);
 
         case '#': // Class (class)
-            return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->pointer_class, pointer_count);
+            return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->pointer_class, pointer_count);
 
         case ':': // SEL (selector)
-            return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->pointer_class, pointer_count);
+            return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->pointer_class, pointer_count);
 
         case '[': // array [size type]
             {
@@ -122,8 +122,9 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                 char *name = malloc(size + 1);
                 memcpy(name, name1, size);
                 name[size] = '\0';
-                if (mrb_const_defined(mrb, mrb_obj_value(cocoa_state(mrb)->struct_module), mrb_intern(mrb, name))) {
-                    mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->struct_module), mrb_intern(mrb, name));
+                struct cocoa_state *cs = cocoa_state(mrb, NULL);
+                if (mrb_const_defined(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name))) {
+                    mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name));
                     free(name);
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
@@ -131,7 +132,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     const char* def = cocoa_bridgesupport_struct_lookup(mrb, name);
                     if(def) {
                         mrb_value elements = mrb_ary_new(mrb);
-                        mrb_value klass = mrb_obj_value(mrb_define_class_under(mrb, cocoa_state(mrb)->struct_module, name, cfunc_state(mrb)->struct_class));
+                        mrb_value klass = mrb_obj_value(mrb_define_class_under(mrb, cs->struct_module, name, cfunc_state(mrb, NULL)->struct_class));
 
                         char *defstr = malloc(strlen(def) + 1);
                         strcpy(defstr, def);
@@ -171,7 +172,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     // TODO: should support anonymous struct
                     // generate struct from type encode {id*@^i} 
                     free(name);
-                    return cfunc_type_with_pointer(mrb, cfunc_state(mrb)->struct_class, pointer_count);
+                    return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->struct_class, pointer_count);
                 }
 
             }

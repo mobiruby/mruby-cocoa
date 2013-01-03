@@ -20,32 +20,3 @@ assert_equal "Test", obj._UTF8String.to_s
 test1.ivar[:obj] = _S("Test123")
 obj = test1.ivar[:obj]
 assert_equal "Test123", obj._UTF8String.to_s
-
-
-############
-# BEGIN C
-
-@interface MobiCocoaTest1 : NSObject {
-    int i;
-    id obj;
-}
-@end
-
-
-@implementation MobiCocoaTest1
-
-- (id)init {
-    if(self = [super init]) {
-        i = 10;
-        obj = @"Test";
-    }
-
-    return self;
-}
-
-- (void)set_i:(int)value
-{
-    i = value;
-}
-
-@end

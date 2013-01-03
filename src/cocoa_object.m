@@ -40,7 +40,8 @@ static mrb_value
 cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 {
     //printf("new_with_id=%p\n", pointer);
-    MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
+    struct cocoa_state *cs = cocoa_state(mrb, NULL);
+    MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cs->object_association_key);
     if(assoc) {
         return assoc.mrb_obj;
     }
@@ -60,23 +61,23 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
     struct RClass *klass;
 
     mrb_sym class_name_sym = mrb_intern(mrb, class_name);
-    if (mrb_const_defined_at(mrb, cocoa_state(mrb)->namespace, class_name_sym)) {
-        klass = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), class_name_sym));
+    if (mrb_const_defined_at(mrb, cs->namespace, class_name_sym)) {
+        klass = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cs->namespace), class_name_sym));
     }
     else {
-        klass = cocoa_state(mrb)->object_class;
+        klass = cs->object_class;
     }
 
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, klass, &cocoa_object_data_type, data));
 
     if(assoc == NULL) {
         assoc = [[MrbObjectMap alloc] init];
-        objc_setAssociatedObject(pointer, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(pointer, cs->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         [assoc release];
     }
     assoc.mrb_obj = self;
         
-    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
+    mrb_value keeper = mrb_gv_get(mrb, cs->sym_obj_holder);
     mrb_funcall_argv(mrb, keeper, mrb_intern(mrb, "push"), 1, &self);
 
     return self;
@@ -92,12 +93,14 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 static mrb_value
 cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     mrb_value pointer_mrb;
     mrb_get_args(mrb, "o", &pointer_mrb);
     id pointer = cfunc_pointer_ptr(pointer_mrb);
     //printf("new=%p\n", pointer);
 
-    MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cocoa_state(mrb)->object_association_key);
+    MrbObjectMap *assoc = objc_getAssociatedObject(pointer, cs->object_association_key);
     if(assoc) {
         //puts(">>>");
         //mrb_p(mrb, assoc.mrb_obj);
@@ -122,19 +125,19 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
         klass2 = mrb_class_get(mrb, class_name);
     }
     else {
-        klass2 = cocoa_state(mrb)->object_class;
+        klass2 = cs->object_class;
     }
 
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, mrb_class_ptr(klass), &cocoa_object_data_type, data));
     
     if(assoc == NULL) {
         assoc = [[MrbObjectMap alloc] init];
-        objc_setAssociatedObject(pointer, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(pointer, cs->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         [assoc release];
     }
     assoc.mrb_obj = self;
     
-    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(data->mrb)->sym_obj_holder);
+    mrb_value keeper = mrb_gv_get(mrb, cs->sym_obj_holder);
     mrb_funcall_argv(mrb, keeper, mrb_intern(mrb, "push"), 1, &self);
 
     return self;
@@ -150,6 +153,8 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
 static mrb_value
 cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     mrb_value pointer;
     mrb_get_args(mrb, "o", &pointer);
 
@@ -158,7 +163,7 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
         return mrb_nil_value();
     }
 
-    MrbObjectMap *assoc = objc_getAssociatedObject(obj, cocoa_state(mrb)->object_association_key);
+    MrbObjectMap *assoc = objc_getAssociatedObject(obj, cs->object_association_key);
     if(assoc) {
     //printf("refer assoc=%p\n",obj);
         return assoc.mrb_obj;
@@ -181,22 +186,22 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     const char *class_name = object_getClassName(obj);
     struct RClass *klass2;
     mrb_sym class_name_sym = mrb_intern(mrb, class_name);
-    if (mrb_const_defined_at(mrb, cocoa_state(mrb)->namespace, class_name_sym)) {
-        klass2 = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cocoa_state(mrb)->namespace), class_name_sym));
+    if (mrb_const_defined_at(mrb, cs->namespace, class_name_sym)) {
+        klass2 = (struct RClass *)mrb_object(mrb_const_get(mrb, mrb_obj_value(cs->namespace), class_name_sym));
     }
     else {
-        klass2 = cocoa_state(mrb)->object_class;
+        klass2 = cs->object_class;
     }
     mrb_value self = mrb_obj_value(Data_Wrap_Struct(mrb, klass2, &cocoa_object_data_type, data));
     mrb_obj_iv_set(mrb, (struct RObject*)mrb_object(self), mrb_intern(mrb, "parent_pointer"), pointer); // keep for GC
 
     if(assoc == NULL && obj) {
         assoc = [[[MrbObjectMap alloc] init] autorelease];
-        objc_setAssociatedObject(obj, cocoa_state(mrb)->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(obj, cs->object_association_key, assoc, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     assoc.mrb_obj = self;
 
-    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
+    mrb_value keeper = mrb_gv_get(mrb, cs->sym_obj_holder);
     mrb_funcall_argv(mrb, keeper, mrb_intern(mrb, "push"), 1, &self);
     //mrb_p(mrb, self);
     //mrb_p(mrb, keeper);
@@ -212,8 +217,10 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
 static Class
 mruby_class_to_objc_class(mrb_state *mrb, struct RClass *klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, klass->c);
+
     Class objc_class;
-    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)klass, (void*)&objc_class)) {
+    if(cocoa_st_lookup(cs->cocoa_classes, (cocoa_st_data_t)klass, (void*)&objc_class)) {
         return objc_class;
     }
 
@@ -468,6 +475,8 @@ cocoa_object_class_objc_msgSend(mrb_state *mrb, mrb_value klass)
 static mrb_value
 cocoa_object_class_inherited(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     mrb_value subclass;
     mrb_get_args(mrb, "o", &subclass);
 
@@ -482,7 +491,7 @@ cocoa_object_class_inherited(mrb_state *mrb, mrb_value klass)
         Class super_class = mruby_class_to_objc_class(mrb, (struct RClass *)mrb_object(klass));
         objc_klass = objc_allocateClassPair(super_class, class_name, 0);
 
-        cocoa_st_insert(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(subclass), (cocoa_st_data_t)objc_klass);
+        cocoa_st_insert(cs->cocoa_classes, (cocoa_st_data_t)mrb_object(subclass), (cocoa_st_data_t)objc_klass);
     }
     
     return mrb_nil_value();
@@ -554,10 +563,12 @@ cocoa_class_exists_cocoa_class(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_object_class_set(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     mrb_value pointer, val;
     mrb_get_args(mrb, "oo", &pointer, &val);
 
-    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_ffi_value", 1, mrb_obj_value(cocoa_state(mrb)->object_class)));
+    id *valp = cfunc_pointer_ptr(mrb_funcall(mrb, val, "to_ffi_value", 1, mrb_obj_value(cs->object_class)));
     *((id*)cfunc_pointer_ptr(pointer)) = *valp;
 
     return val;
@@ -567,6 +578,8 @@ cocoa_object_class_set(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     mrb_value class_name_mrb;
     mrb_get_args(mrb, "o", &class_name_mrb);
     const char *class_name = mrb_sym2name(mrb, mrb_symbol(class_name_mrb));
@@ -575,8 +588,8 @@ cocoa_class_load_cocoa_class(mrb_state *mrb, mrb_value klass)
        mrb_raisef(mrb, E_NAME_ERROR, "Can't load %s class in Cocoa", class_name);
     }
     
-    struct RClass *object_class = cocoa_state(mrb)->object_class;
-    return mrb_obj_value(mrb_define_class_under(mrb, cocoa_state(mrb)->namespace, class_name, object_class));
+    struct RClass *object_class = cs->object_class;
+    return mrb_obj_value(mrb_define_class_under(mrb, cs->namespace, class_name, object_class));
 }
 
 
@@ -606,8 +619,10 @@ cocoa_object_class_protocol(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_class_register(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     Class objc_class;
-    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
+    if(cocoa_st_lookup(cs->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
         objc_registerClassPair(objc_class);
     }
     
@@ -618,8 +633,10 @@ cocoa_class_register(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_class_addr(mrb_state *mrb, mrb_value klass)
 {
+    struct cocoa_state *cs = cocoa_state(mrb, mrb_obj_ptr(klass)->c);
+
     Class objc_class;
-    if(cocoa_st_lookup(cocoa_state(mrb)->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
+    if(cocoa_st_lookup(cs->cocoa_classes, (cocoa_st_data_t)mrb_object(klass), (void*)&objc_class)) {
         return cfunc_pointer_new_with_pointer(mrb, objc_class, 0);
     }
     
@@ -641,11 +658,14 @@ static struct mrb_data_type cocoa_object_data_type = {
 void
 init_cocoa_object(mrb_state *mrb, struct RClass* module)
 {
-    struct RClass *object_class = mrb_define_class_under(mrb, module, "Object", cfunc_state(mrb)->pointer_class);
-    cocoa_state(mrb)->object_class = object_class;
-    cocoa_state(mrb)->sym_obj_holder = mrb_intern(mrb, "$mobiruby_obj_holder");
-    cocoa_state(mrb)->sym_delete = mrb_intern(mrb, "delete");
-    cocoa_state(mrb)->cocoa_classes = cocoa_st_init_pointertable();
+    struct cocoa_state *cs = cocoa_state(mrb, module);
+    struct RClass *object_class = mrb_define_class_under(mrb, module, "Object", cfunc_state(mrb, NULL)->pointer_class);
+    set_cocoa_state(mrb, (struct RObject*)object_class, cs);
+
+    cs->object_class = object_class;
+    cs->sym_obj_holder = mrb_intern(mrb, "$mobiruby_obj_holder");
+    cs->sym_delete = mrb_intern(mrb, "delete");
+    cs->cocoa_classes = cocoa_st_init_pointertable();
 
     mrb_define_class_method(mrb, object_class, "objc_addMethod", cocoa_object_class_objc_addMethod, ARGS_ANY());
     mrb_define_class_method(mrb, object_class, "objc_addClassMethod", cocoa_object_class_objc_addClassMethod, ARGS_ANY());

@@ -25,9 +25,10 @@ load_cocoa_bridgesupport(mrb_state *mrb,
     struct BridgeSupportConstTable *const_table,
     struct BridgeSupportEnumTable *enum_table)
 {
-    cocoa_state(mrb)->struct_table = struct_table;
-    cocoa_state(mrb)->const_table = const_table;
-    cocoa_state(mrb)->enum_table = enum_table;
+    struct cocoa_state *cs = cocoa_state(mrb, NULL);
+    cs->struct_table = struct_table;
+    cs->const_table = const_table;
+    cs->enum_table = enum_table;
 }
 
 
@@ -35,11 +36,11 @@ load_cocoa_bridgesupport(mrb_state *mrb,
 const char*
 cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
 {
-    if(cocoa_state(mrb)->struct_table == NULL) {
+    if(cocoa_state(mrb, NULL)->struct_table == NULL) {
         return NULL;
     }
 
-    struct BridgeSupportStructTable *cur = cocoa_state(mrb)->struct_table;
+    struct BridgeSupportStructTable *cur = cocoa_state(mrb, NULL)->struct_table;
     while(cur->name) {
         if(strcmp(name, cur->name)==0) {
             return cur->definition;
@@ -53,7 +54,7 @@ cocoa_bridgesupport_struct_lookup(mrb_state *mrb, const char *name)
 mrb_value
 cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 {
-    if(cocoa_state(mrb)->const_table == NULL) {
+    if(cocoa_state(mrb, NULL)->const_table == NULL) {
         return mrb_nil_value();
     }
 
@@ -82,7 +83,7 @@ cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 mrb_value
 cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
 {
-    if(cocoa_state(mrb)->const_table == NULL) {
+    if(cocoa_state(mrb, NULL)->const_table == NULL) {
         return mrb_nil_value();
     }
 
@@ -90,7 +91,7 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     mrb_get_args(mrb, "o", &name);
     char *namestr = mrb_string_value_ptr(mrb, name);
 
-    struct BridgeSupportConstTable *ccur = cocoa_state(mrb)->const_table;
+    struct BridgeSupportConstTable *ccur = cocoa_state(mrb, NULL)->const_table;
     while(ccur->name) {
         if(strcmp(namestr, ccur->name)==0) {
             mrb_value type = objc_type_to_cfunc_type(mrb, ccur->type);
@@ -101,7 +102,7 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
         ++ccur;
     }
 
-    struct BridgeSupportEnumTable *ecur = cocoa_state(mrb)->enum_table;
+    struct BridgeSupportEnumTable *ecur = cocoa_state(mrb, NULL)->enum_table;
     while(ecur->name) {
         if(strcmp(namestr, ecur->name)==0) {
             return ecur->value;
@@ -117,17 +118,19 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
  * initialize function
  */
 void
-init_cocoa_bridge_support(mrb_state *mrb)
+init_cocoa_bridge_support(mrb_state *mrb, struct RClass* module)
 {
-    struct RClass *struct_module = mrb_define_module_under(mrb, cocoa_state(mrb)->namespace, "Struct");
-    cocoa_state(mrb)->struct_module = struct_module;
+    struct cocoa_state *cs = cocoa_state(mrb, module);
+
+    struct RClass *struct_module = mrb_define_module_under(mrb, module, "Struct");
     mrb_define_class_method(mrb, struct_module, "const_missing", cocoa_struct_const_missing, ARGS_REQ(1));
 
-    struct RClass *const_module = mrb_define_module_under(mrb, cocoa_state(mrb)->namespace, "Const");
-    cocoa_state(mrb)->const_module = const_module;
+    struct RClass *const_module = mrb_define_module_under(mrb, module, "Const");
     mrb_define_class_method(mrb, const_module, "const_missing", cocoa_const_const_missing, ARGS_REQ(1));
     mrb_define_class_method(mrb, const_module, "method_missing", cocoa_const_const_missing, ARGS_REQ(1));
 
-    cocoa_state(mrb)->const_table = NULL;
-    cocoa_state(mrb)->struct_table = NULL;
+    cs->struct_module = struct_module;
+    cs->const_module = const_module;
+    cs->const_table = NULL;
+    cs->struct_table = NULL;
 }

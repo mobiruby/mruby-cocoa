@@ -71,11 +71,12 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
         if([self retainCount] == 2) {
             for(int i = 0; i < cocoa_vm_count; ++i) {
                 mrb_state *mrb = cocoa_mrb_states[i];
-                MrbObjectMap *assoc = objc_getAssociatedObject(self, cocoa_state(mrb)->object_association_key);
+                struct cocoa_state *state = cocoa_state(mrb, NULL);
+                MrbObjectMap *assoc = objc_getAssociatedObject(self, state->object_association_key);
                 if(assoc) {
-                    mrb_value keeper = mrb_gv_get(mrb, cocoa_state(mrb)->sym_obj_holder);
+                    mrb_value keeper = mrb_gv_get(mrb, state->sym_obj_holder);
                     mrb_value mrb_obj = assoc.mrb_obj;
-                    mrb_funcall_argv(mrb, keeper, cocoa_state(mrb)->sym_delete, 1, &mrb_obj);
+                    mrb_funcall_argv(mrb, keeper, state->sym_delete, 1, &mrb_obj);
                 }
             }
         }

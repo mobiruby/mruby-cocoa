@@ -101,5 +101,4 @@ class Cocoa::Object
       raise "Unknown method #{name}"
     end
   end
-
 end

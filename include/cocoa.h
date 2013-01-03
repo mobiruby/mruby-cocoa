@@ -76,7 +76,6 @@ struct cocoa_state {
 extern mrb_state **cocoa_mrb_states;
 extern int cocoa_vm_count;
 
-void init_cocoa_module(mrb_state *mrb);
 void close_cocoa_module(mrb_state *mrb);
 
 void
@@ -86,32 +85,22 @@ load_cocoa_bridgesupport(mrb_state *mrb,
     struct BridgeSupportEnumTable *enum_table);
 
 
-/* offset of cocoa_state in mrb->ud */
-extern size_t cocoa_state_offset;
-
-/* service function for setting cocoa_state_offset */
-#define cocoa_offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-
-/*
-example:
-
-struct mrb_state_ud {
-    struct cocoa_state cocoa_state;
-};
-
-cocoa_state_offset = cfunc_offsetof(struct mrb_state_ud, cocoa_state);
-
-mrb_state *mrb = mrb_open();
-mrb->ud = malloc(sizeof(struct mrb_state_ud));
-
-init_cocoa_module(mrb);
-*/
-
-
 static inline struct cocoa_state *
-cocoa_state(mrb_state* mrb)
+cocoa_state(mrb_state *mrb, struct RClass* klass)
 {
-  return (struct cocoa_state *)(mrb->ud + cocoa_state_offset);
+    if(klass == NULL) {
+        klass = mrb_object(mrb_vm_const_get(mrb, mrb_intern(mrb, "Cocoa")));
+    }
+    mrb_value state = mrb_mod_cv_get(mrb, klass, mrb_intern(mrb, "cocoa_state"));
+    return (struct cocoa_state *)mrb_voidp(state);
+}
+
+
+static inline void
+set_cocoa_state(mrb_state *mrb, struct RClass* klass, struct cocoa_state *state)
+{
+    mrb_value mstate = mrb_voidp_value(state);
+    mrb_mod_cv_set(mrb, klass, mrb_intern(mrb, "cocoa_state"), mstate);
 }
 
 

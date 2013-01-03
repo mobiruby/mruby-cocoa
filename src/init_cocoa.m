@@ -15,18 +15,11 @@
 #include "mruby/class.h"
 #include "mruby/proc.h"
 #include "mruby/dump.h"
+#include "cfunc_pointer.h"
 
 #import <Foundation/Foundation.h>
 #include <setjmp.h>
 #include "ffi.h"
-
-extern const char mruby_cocoa_data_cocoa[];
-extern const char mruby_cocoa_data_object[];
-extern const char mruby_cocoa_data_object_property[];
-extern const char mruby_cocoa_data_object_method[];
-extern const char mruby_cocoa_data_object_ivar[];
-extern const char mruby_cocoa_data_block[];
-extern const char mruby_cocoa_data_protocol[];
 
 size_t cocoa_state_offset = 0;
 
@@ -36,22 +29,15 @@ size_t cocoa_state_offset = 0;
 mrb_state **cocoa_mrb_states = NULL;
 int cocoa_vm_count = 0;
 
-static
-void load_irep(mrb_state* mrb, const const char* data)
+
+mrb_value
+cocoa_mrb_state(mrb_state *mrb, mrb_value klass)
 {
-    int n = mrb_read_irep(mrb, data);
-    if (n >= 0) {
-        mrb_irep *irep = mrb->irep[n];
-        struct RProc *proc = mrb_proc_new(mrb, irep);
-        proc->target_class = mrb->object_class;
-        mrb_run(mrb, proc, mrb_nil_value());
-    }
-    else if (mrb->exc) {
-        longjmp(*(jmp_buf*)mrb->jmp, 1);
-    }
+    return cfunc_pointer_new_with_pointer(mrb, mrb, false);
 }
 
-void init_cocoa_module(mrb_state *mrb)
+void
+mrb_mruby_cocoa_gem_init(mrb_state *mrb)
 {
     if(cocoa_vm_count >= MAX_COCOA_MRB_STATE_COUNT - 1) {
         puts("Too much open vm"); // TODO
@@ -66,21 +52,14 @@ void init_cocoa_module(mrb_state *mrb)
     cocoa_mrb_states[cocoa_vm_count++] = mrb;
 
     struct RClass *ns = mrb_define_module(mrb, "Cocoa");
-    cocoa_state(mrb)->namespace = ns;
+    struct cocoa_state *state = mrb_malloc(mrb, sizeof(struct cocoa_state));
+    set_cocoa_state(mrb, ns, state);
 
     init_objc_hook();
     init_cocoa_module_type(mrb, ns);
     init_cocoa_object(mrb, ns);
     init_cocoa_block(mrb, ns);
-    init_cocoa_bridge_support(mrb);
-
-    load_irep(mrb, mruby_cocoa_data_cocoa);
-    load_irep(mrb, mruby_cocoa_data_object);
-    load_irep(mrb, mruby_cocoa_data_object_property);
-    load_irep(mrb, mruby_cocoa_data_object_method);
-    load_irep(mrb, mruby_cocoa_data_object_ivar);
-    load_irep(mrb, mruby_cocoa_data_block);
-    load_irep(mrb, mruby_cocoa_data_protocol);
+    init_cocoa_bridge_support(mrb, ns);
 }
 
 void close_cocoa_module(mrb_state *mrb)
