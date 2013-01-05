@@ -52,8 +52,12 @@ mrb_mruby_cocoa_gem_init(mrb_state *mrb)
     cocoa_mrb_states[cocoa_vm_count++] = mrb;
 
     struct RClass *ns = mrb_define_module(mrb, "Cocoa");
-    struct cocoa_state *state = mrb_malloc(mrb, sizeof(struct cocoa_state));
-    set_cocoa_state(mrb, ns, state);
+
+    struct cocoa_state *cs = mrb_malloc(mrb, sizeof(struct cocoa_state));
+    cs->namespace = ns;
+
+    mrb_value mcs = mrb_voidp_value(cs);
+    mrb_mod_cv_set(mrb, ns, mrb_intern(mrb, "cocoa_state"), mcs);
 
     init_objc_hook();
     init_cocoa_module_type(mrb, ns);

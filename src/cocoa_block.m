@@ -91,9 +91,8 @@ const struct mrb_data_type cfunc_block_data_type = {
 void
 init_cocoa_block(mrb_state *mrb, struct RClass* module)
 {
-    struct cocoa_state *cs = cocoa_state(mrb, module);
+    struct cocoa_state *cs = cocoa_state(mrb);
     struct RClass *block_class = mrb_define_class_under(mrb, module, "Block", cfunc_state(mrb, NULL)->closure_class);
-    set_cocoa_state(mrb, (struct RObject*)block_class, cs);
-
+    
     mrb_define_method(mrb, block_class, "addr", cocoa_block_addr, ARGS_NONE());
 }
