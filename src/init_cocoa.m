@@ -14,6 +14,7 @@
 #include "mruby.h"
 #include "mruby/class.h"
 #include "mruby/proc.h"
+#include "mruby/value.h"
 #include "mruby/dump.h"
 #include "cfunc_pointer.h"
 
@@ -28,6 +29,23 @@ size_t cocoa_state_offset = 0;
 
 mrb_state **cocoa_mrb_states = NULL;
 int cocoa_vm_count = 0;
+
+/*
+ * internal function
+ */
+static void
+a_destructor(mrb_state *mrb, void *state)
+{
+    close_cocoa_module(mrb);
+    //free(p);
+}
+/*
+ * internal data
+ */
+static struct mrb_data_type a_data_type = {
+    "a_object", a_destructor,
+};
+
 
 
 mrb_value
@@ -48,6 +66,7 @@ mrb_mruby_cocoa_gem_init(mrb_state *mrb)
         for(int i = 0; i < MAX_COCOA_MRB_STATE_COUNT; ++i) {
             cocoa_mrb_states[i] = NULL;
         }
+        cocoa_vm_count = 0;
     }
     cocoa_mrb_states[cocoa_vm_count++] = mrb;
 
@@ -55,9 +74,12 @@ mrb_mruby_cocoa_gem_init(mrb_state *mrb)
 
     struct cocoa_state *cs = mrb_malloc(mrb, sizeof(struct cocoa_state));
     cs->namespace = ns;
+    // printf("cs=%p, %p\n", cs, mrb->ud);
 
-    mrb_value mcs = mrb_voidp_value(cs);
-    mrb_mod_cv_set(mrb, ns, mrb_intern(mrb, "cocoa_state"), mcs);
+    // mrb_value mcs = mrb_voidp_value(cs);
+    mrb_value mcs = mrb_obj_value(Data_Wrap_Struct(mrb, mrb->object_class, &a_data_type, cs));
+    //mrb_value mcs = mrb_obj_value(cs);
+    mrb_gv_set(mrb, mrb_intern(mrb, "$_cocoa_state"), mcs);
 
     init_objc_hook();
     init_cocoa_module_type(mrb, ns);
@@ -72,6 +94,6 @@ void close_cocoa_module(mrb_state *mrb)
     while(cocoa_mrb_states[i] != mrb) {
         ++i;
     }
-    memmove(cocoa_mrb_states[i+1], cocoa_mrb_states[i], sizeof(mrb_state *) * (MAX_COCOA_MRB_STATE_COUNT - i - 1));
+    memmove(&cocoa_mrb_states[i+1], &cocoa_mrb_states[i], sizeof(mrb_state *) * (MAX_COCOA_MRB_STATE_COUNT - i - 1));
     --cocoa_vm_count;
 }

@@ -93,6 +93,7 @@ init_cocoa_block(mrb_state *mrb, struct RClass* module)
 {
     struct cocoa_state *cs = cocoa_state(mrb);
     struct RClass *block_class = mrb_define_class_under(mrb, module, "Block", cfunc_state(mrb, NULL)->closure_class);
+    cs->block_class = block_class;
     
     mrb_define_method(mrb, block_class, "addr", cocoa_block_addr, ARGS_NONE());
 }

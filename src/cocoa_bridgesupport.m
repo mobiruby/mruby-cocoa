@@ -98,7 +98,6 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     while(ccur->name) {
         if(strcmp(namestr, ccur->name)==0) {
             mrb_value type = objc_type_to_cfunc_type(mrb, ccur->type);
-
             mrb_value ptr = cfunc_pointer_new_with_pointer(mrb, ccur->value, false);
             return mrb_funcall(mrb, type, "refer", 1, ptr);
         }

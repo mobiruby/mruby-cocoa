@@ -392,7 +392,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     values[1] = malloc(sizeof(void*));
     *((void***)values)[1] = sel;
     
-    mrb_sym sym_to_ffi_value= mrb_intern(mrb, "to_ffi_value");
+    mrb_sym sym_to_ffi_value = mrb_intern(mrb, "to_ffi_value");
     for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
         mrb_value marg = margs[i - SELF_AND_SEL];
         if(!mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_ffi_value)) {

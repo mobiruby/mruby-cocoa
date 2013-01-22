@@ -57,7 +57,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
     int pointer_count = 0;
     const char *encode = objc_type;
     struct cocoa_state *cs = cocoa_state(mrb);
-        
+    
     while(*encode) {
         switch(*encode) {
         case_type('c', sint8_class); // char
@@ -122,6 +122,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                 }
                 char *name = malloc(size + 1);
                 memcpy(name, name1, size);
+                name[size] = '\0';
                 name[size] = '\0';
                 if (mrb_const_defined(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name))) {
                     mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name));

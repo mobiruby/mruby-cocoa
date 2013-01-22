@@ -66,11 +66,13 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
         return; // Intializing
     }
 
+/*
     if(!processing_swizzled_release) {
         processing_swizzled_release = true;
         if([self retainCount] == 2) {
             for(int i = 0; i < cocoa_vm_count; ++i) {
                 mrb_state *mrb = cocoa_mrb_states[i];
+                printf(">>rel mrb=%p\n", mrb);
                 struct cocoa_state *cs = cocoa_state(mrb);
                 MrbObjectMap *assoc = objc_getAssociatedObject(self, cs->object_association_key);
                 if(assoc) {
@@ -78,10 +80,11 @@ cocoa_swizzle_release_binding(ffi_cif *cif, void *ret, void **args,  void *origi
                     mrb_value mrb_obj = assoc.mrb_obj;
                     mrb_funcall_argv(mrb, keeper, cs->sym_delete, 1, &mrb_obj);
                 }
+                puts("<<rel");
             }
         }
     }
-    
+    */
     // call original release method
     void (*original_release_)(id self, SEL _cmd, ...) = original_release;
     original_release_(self, *(void**)args[1]);
@@ -159,7 +162,3 @@ void init_objc_hook()
         swizzled_release_imp = method_getImplementation(release_method);
     }
 }
-
-
-
-

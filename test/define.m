@@ -51,6 +51,7 @@ struct MobiCocoaStruct1 {
 - (id)init {
     if(self = [super init]) {
         i = 10;
+        struct1.i = 100;
         obj = @"Test";
     }
 
