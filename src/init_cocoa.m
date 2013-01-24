@@ -88,6 +88,11 @@ mrb_mruby_cocoa_gem_init(mrb_state *mrb)
     init_cocoa_bridge_support(mrb, ns);
 }
 
+void
+mrb_mruby_cocoa_gem_final(mrb_state *mrb)
+{
+}
+
 void close_cocoa_module(mrb_state *mrb)
 {
     int i = 0;
