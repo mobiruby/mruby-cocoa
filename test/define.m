@@ -17,7 +17,8 @@ struct BridgeSupportConstTable const_table[] = {
 };
 
 struct BridgeSupportEnumTable enum_table[] = {
-    {.name="enum1"}, // 1
+    {.name="enum1", .value={0x1}, .type='s'},
+    {.name="enum2", .value={0x3fd0000000000000}, .type='d'}, // 0.25
     {.name = NULL}
 };
 

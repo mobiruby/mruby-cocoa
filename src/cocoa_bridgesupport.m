@@ -107,7 +107,22 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     struct BridgeSupportEnumTable *ecur = cs->enum_table;
     while(ecur->name) {
         if(strcmp(namestr, ecur->name)==0) {
-            return ecur->value;
+            struct cfunc_state *cfs = cfunc_state(mrb, NULL);
+            mrb_value result_ptr = cfunc_pointer_new_with_pointer(mrb, &ecur->value, false);
+
+            switch(ecur->type) {
+            case 's':
+                return mrb_funcall(mrb, mrb_obj_value(cfs->sint64_class), "refer", 1, result_ptr);
+
+            case 'u':
+                return mrb_funcall(mrb, mrb_obj_value(cfs->uint64_class), "refer", 1, result_ptr);
+
+            case 'd':
+                return mrb_funcall(mrb, mrb_obj_value(cfs->double_class), "refer", 1, result_ptr);
+
+            default:
+                return mrb_nil_value();
+            }
         }
         ++ecur;
     }
