@@ -94,9 +94,9 @@ load_cocoa_bridgesupport(mrb_state *mrb,
 static inline struct cocoa_state *
 cocoa_state(mrb_state *mrb)
 {
-    mrb_value state = mrb_gv_get(mrb, mrb_intern(mrb, "$_cocoa_state"));
-    // return (struct cocoa_state *)mrb_voidp(state);
-    return (struct cocoa_state *)DATA_PTR(state);
+    struct RClass* klass = (struct RClass*)mrb_object(mrb_vm_const_get(mrb, mrb_intern(mrb, "Cocoa")));
+    mrb_value mstate = mrb_mod_cv_get(mrb, klass, mrb_intern(mrb, "cocoa_state"));
+    return (struct cocoa_state *)mrb_voidp(mstate);
 }
 
 int cocoa_swizzle_release(id obj);
