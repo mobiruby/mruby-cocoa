@@ -1,4 +1,3 @@
-if false
 mobiruby_test "Cocoa::object declare property" do
   class Cocoa::MobiCocoaTest1 < Cocoa::NSObject 
     attr_accessor :prop1, :prop2, :prop3, :prop3_, :prop4, :prop4_
@@ -85,5 +84,4 @@ mobiruby_test "Cocoa::object declare property" do
     assert_equal "PROP4_", test1.prop4_
     assert_equal nil, test1.prop4
   end
-end
 end
