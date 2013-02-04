@@ -23,42 +23,4 @@ class Cocoa::Object
     self.objc_msgSend(:self, self.objc_property(prop_name)[:setter], value)
     value
   end
-
-  class PropAttr < CFunc::Struct
-    define CFunc::Pointer, :name, CFunc::Pointer, :value
-  end
-
-  # options: :copy, :readonly, :weak, :setter => xxx, :getter => xxx, :ivar => :xxx
-  def self.property(name, type, *options_)
-    options = {}
-    options_.each do |opt|
-      if opt.is_a?(Hash)
-        opt.each do |k, v|
-          options[k.to_sym] = v if v
-        end
-      else
-        options[opt.to_sym] = true
-      end
-    end
-    
-    if options.has_key?(:getter)
-      options[:getter] = options[:getter].to_s
-    else
-      options[:getter] = name.to_s
-      # todo: define objc getter method
-    end
-    
-    unless options.has_key?(:readonly)
-      if options.has_key?(:setter)
-        options[:setter] = options[:setter].to_s
-      else
-        options[:setter] = "set#{name.to_s.capitalize}:"
-        # todo: define objc getter method
-      end
-    end
-
-    # create property attributes
-    # declare property
-    nil
-  end
 end
