@@ -12,7 +12,7 @@ end
 MRuby::Build.new do |conf|
   toolchain :clang
   [conf.cc, conf.cxx, conf.objc].each do |cc|
-    cc.defines << %w(MRB_INT64)
+    cc.defines << %w()
   end
   conf.gem :git => 'git@github.com:mobiruby/mruby-cfunc.git' do |g|
     # g.use_pkg_config
