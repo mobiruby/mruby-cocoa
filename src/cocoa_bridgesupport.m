@@ -95,7 +95,7 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     char *namestr = mrb_string_value_ptr(mrb, name);
 
     struct BridgeSupportConstTable *ccur = cs->const_table;
-    while(ccur->name) {
+    while(ccur && ccur->name) {
         if(strcmp(namestr, ccur->name)==0) {
             mrb_value type = objc_type_to_cfunc_type(mrb, ccur->type);
             mrb_value ptr = cfunc_pointer_new_with_pointer(mrb, ccur->value, false);
@@ -105,20 +105,30 @@ cocoa_const_const_missing(mrb_state *mrb, mrb_value klass)
     }
 
     struct BridgeSupportEnumTable *ecur = cs->enum_table;
-    while(ecur->name) {
+    while(ecur && ecur->name) {
         if(strcmp(namestr, ecur->name)==0) {
             struct cfunc_state *cfs = cfunc_state(mrb, NULL);
-            mrb_value result_ptr = cfunc_pointer_new_with_pointer(mrb, &ecur->value, false);
+            struct cfunc_type_data *data;
+            mrb_value val;
 
             switch(ecur->type) {
             case 's':
-                return mrb_funcall(mrb, mrb_obj_value(cfs->sint64_class), "refer", 1, result_ptr);
+                val = mrb_funcall(mrb, mrb_obj_value(cfs->sint64_class), "new", 0);
+                data = (struct cfunc_type_data*)DATA_PTR(val);
+                data->value._sint64 = ecur->value.i64;
+                return val;
 
             case 'u':
-                return mrb_funcall(mrb, mrb_obj_value(cfs->uint64_class), "refer", 1, result_ptr);
+                val = mrb_funcall(mrb, mrb_obj_value(cfs->uint64_class), "new", 0);
+                data = (struct cfunc_type_data*)DATA_PTR(val);
+                data->value._uint64 = ecur->value.u64;
+                return val;
 
             case 'd':
-                return mrb_funcall(mrb, mrb_obj_value(cfs->double_class), "refer", 1, result_ptr);
+                val = mrb_funcall(mrb, mrb_obj_value(cfs->double_class), "new", 0);
+                data = (struct cfunc_type_data*)DATA_PTR(val);
+                data->value._double = ecur->value.dbl;
+                return val;
 
             default:
                 return mrb_nil_value();
