@@ -16,13 +16,13 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [x] define class method
 - [x] access to instance variables
 - [x] declare instance variables
-- [x] declare property
+- [ ] declare property
 - [x] use property
 - [x] define protocol
 - [x] define protocol - parent protocols
 - [x] define protocol - instance method
 - [x] define protocol - class method
-- [ ] define protocol - define property
+- [ ] define protocol - declare property
 - [x] adopt protocol
 - [ ] handle exception
 - [ ] research NSCopying
