@@ -51,6 +51,7 @@ struct BridgeSupportEnumTable
     const char *name;
     const char type;
     union {
+        char dump[8];
         uint64_t u64;
         int64_t i64;
         double dbl;

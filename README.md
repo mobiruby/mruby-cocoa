@@ -16,22 +16,36 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [x] define class method
 - [x] access to instance variables
 - [x] declare instance variables
-- [x] declare property
-- [x] use property
 - [x] define protocol
 - [x] define protocol - parent protocols
 - [x] define protocol - instance method
 - [x] define protocol - class method
-- [ ] define protocol - define property
 - [x] adopt protocol
 - [ ] handle exception
 - [ ] research NSCopying
+
+- pending
+-- declare/use property
+
+
+## Limitations
+
+### Don't support property access
+
+mruby-cocoa don't support `@property` access.
+
+[Objective-C Runtime](https://developer.apple.com/library/ios/#documentation/Cocoa/Reference/ObjCRuntimeRef/Reference/reference.html) has propert access. Objective-C Runtime can't access properties that's defined in Category Class.
+
+I found [similar problem](http://stackoverflow.com/questions/9639250/how-to-dynamically-determine-objective-c-property-type) in stackoverflow.
+
+I can make Class properties list by static analytics using clang. It's same way with [BridgeSupport](http://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man5/BridgeSupport.5.html). Can somebody help me?
+
 
 
 ## Todo
 
 * test! test! test!
-* check circular reference
+* rewrite memory management
 * examples
 * documents
 
