@@ -120,13 +120,13 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                     ++encode;
                     ++size;
                 }
-                char *name = malloc(size + 1);
+                char *name = mrb_malloc(mrb, size + 1);
                 memcpy(name, name1, size);
                 name[size] = '\0';
                 name[size] = '\0';
                 if (mrb_const_defined(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name))) {
                     mrb_value klass = mrb_const_get(mrb, mrb_obj_value(cs->struct_module), mrb_intern(mrb, name));
-                    free(name);
+                    mrb_free(mrb, name);
                     return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                 }
                 else {
@@ -135,7 +135,7 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
                         mrb_value elements = mrb_ary_new(mrb);
                         mrb_value klass = mrb_obj_value(mrb_define_class_under(mrb, cs->struct_module, name, cfunc_state(mrb, NULL)->struct_class));
 
-                        char *defstr = malloc(strlen(def) + 1);
+                        char *defstr = mrb_malloc(mrb, strlen(def) + 1);
                         strcpy(defstr, def);
 
                         char *token = defstr;
@@ -164,15 +164,15 @@ objc_type_to_cfunc_type(mrb_state *mrb, const char* objc_type)
 
                         mrb_funcall(mrb, klass, "define", 1, elements);
 
-                        free(defstr);
-                        free(name);
+                        mrb_free(mrb, defstr);
+                        mrb_free(mrb, name);
 
                         return cfunc_type_with_pointer(mrb, mrb_class_ptr(klass), pointer_count);
                     }
 
                     // TODO: should support anonymous struct
                     // generate struct from type encode {id*@^i} 
-                    free(name);
+                    mrb_free(mrb, name);
                     return cfunc_type_with_pointer(mrb, cfunc_state(mrb, NULL)->struct_class, pointer_count);
                 }
 

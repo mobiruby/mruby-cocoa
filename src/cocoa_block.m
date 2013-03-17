@@ -50,8 +50,8 @@ objc_block_descriptor = {
 static mrb_value
 cocoa_block_addr(mrb_state *mrb, mrb_value self)
 {
-    struct objc_block_literal **bl = malloc(sizeof(struct objc_block_literal *));
-    *bl = malloc(sizeof(struct objc_block_literal));
+    struct objc_block_literal **bl = mrb_malloc(mrb, sizeof(struct objc_block_literal *));
+    *bl = mrb_malloc(mrb, sizeof(struct objc_block_literal));
     (*bl)->isa = &_NSConcreteGlobalBlock;
     (*bl)->flags = 0;
     (*bl)->reserved = 0;
@@ -70,9 +70,9 @@ cocoa_block_destructor(mrb_state *mrb, void *p)
 {
     // TODO: pointerの解放をどうする？
     // if(((struct cfunc_block_data*)p)->autofree) {
-    //    free(((struct cfunc_block_data*)p)->pointer);
+    //    mrb_free(mrb, ((struct cfunc_block_data*)p)->pointer);
     // }
-    free(p);
+    mrb_free(mrb, p);
 }
 
 

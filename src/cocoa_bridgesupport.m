@@ -65,7 +65,7 @@ cocoa_struct_const_missing(mrb_state *mrb, mrb_value klass)
 
     const char *definition = cocoa_bridgesupport_struct_lookup(mrb, namestr);
     if(definition) {
-        char *type = malloc(strlen(namestr) + 4);
+        char *type = mrb_malloc(mrb, strlen(namestr) + 4);
         strcpy(type, "{");
         strcat(type, namestr);
         strcat(type, "=}");

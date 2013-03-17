@@ -47,7 +47,7 @@ cocoa_object_new_with_id(mrb_state *mrb, id pointer)
     }
 
     struct cocoa_object_data *data;
-    data = malloc(sizeof(struct cocoa_object_data));
+    data = mrb_malloc(mrb, sizeof(struct cocoa_object_data));
     data->mrb = mrb;
     data->refer = false;
     data->autofree = false;
@@ -108,7 +108,7 @@ cocoa_object_class_new(mrb_state *mrb, mrb_value klass)
     }
     
     struct cocoa_object_data *data;
-    data = malloc(sizeof(struct cocoa_object_data));
+    data = mrb_malloc(mrb, sizeof(struct cocoa_object_data));
     data->mrb = mrb;
     data->refer = false;
     data->autofree = false;
@@ -170,13 +170,13 @@ cocoa_object_class_refer(mrb_state *mrb, mrb_value klass)
     }
     //printf("refer=%p\n", obj);
 
-    struct cocoa_object_data *data = malloc(sizeof(struct cocoa_object_data));
+    struct cocoa_object_data *data = mrb_malloc(mrb, sizeof(struct cocoa_object_data));
     data->mrb = mrb;
     data->refer = true;
     data->autofree = true;
     data->autorelease = true;
 
-    data->value._pointer = malloc(sizeof(id));
+    data->value._pointer = mrb_malloc(mrb, sizeof(id));
     *((id*)data->value._pointer) = obj;
 
     if(cocoa_swizzle_release(obj)) {
@@ -252,7 +252,7 @@ cocoa_object_inspect(mrb_state *mrb, mrb_value self)
         NSString *varName = [NSString stringWithUTF8String: ivar_getName( ivarList[i] )];
         [result appendFormat: @" %@=%@", varName, [data->pointer valueForKey: varName]];
     }
-    free( ivarList );
+    mrb_free(mrb,  ivarList );
     */
     [result appendString: @">"];
         
@@ -369,12 +369,12 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     }
     
     //printf("m3 %s\n",method_name);
-    arg_type_class = malloc(sizeof(mrb_value) * cocoa_argc);
-    arg_types = malloc(sizeof(ffi_type*) * cocoa_argc);
+    arg_type_class = mrb_malloc(mrb, sizeof(mrb_value) * cocoa_argc);
+    arg_types = mrb_malloc(mrb, sizeof(ffi_type*) * cocoa_argc);
     for(i = 0; i < cocoa_method_argc; i++) {
         char *argtype = method_copyArgumentType(method, i);
         arg_type_class[i] = objc_type_to_cfunc_type(mrb, argtype);
-        free(argtype);
+        mrb_free(mrb, argtype);
         arg_types[i] = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(arg_type_class[i]))->ffi_type_value;
     }
     //printf("m4 %s\n",method_name);
@@ -384,12 +384,12 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     }
     //printf("m5 %s\n",method_name);
     
-    values = malloc(sizeof(void*) * cocoa_argc);
+    values = mrb_malloc(mrb, sizeof(void*) * cocoa_argc);
     
-    values[0] = malloc(sizeof(void*));
+    values[0] = mrb_malloc(mrb, sizeof(void*));
     *((void***)values)[0] = get_cfunc_pointer_data((struct cfunc_type_data *)data);
     
-    values[1] = malloc(sizeof(void*));
+    values[1] = mrb_malloc(mrb, sizeof(void*));
     *((void***)values)[1] = sel;
     
     mrb_sym sym_to_ffi_value = mrb_intern(mrb, "to_ffi_value");
@@ -406,13 +406,13 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     
     char *result_cocoa_type = method_copyReturnType(method);
     mrb_value result_type_class = objc_type_to_cfunc_type(mrb, result_cocoa_type);
-    free(result_cocoa_type);
+    mrb_free(mrb, result_cocoa_type);
 
     ffi_type *result_ffi_type = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(result_type_class))->ffi_type_value;
-    void *result_ptr = malloc(result_ffi_type->size);
+    void *result_ptr = mrb_malloc(mrb, result_ffi_type->size);
     if(result_ffi_type->type == FFI_TYPE_STRUCT) {
         int size = mrb_fixnum(mrb_funcall(mrb, result_type_class, "size", 0));
-        result_ptr = malloc(size);
+        result_ptr = mrb_malloc(mrb, size);
     }
 
     ffi_cif cif;
@@ -430,7 +430,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
         }
     }
     else {
-        free(result_ptr);
+        mrb_free(mrb, result_ptr);
         cfunc_mrb_raise_without_jump(mrb, E_NAME_ERROR, "can't find method %s", method_name);
         goto error_exit;
     }
@@ -439,12 +439,12 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 error_exit:
     if(values) {
         for(i = 0; i < SELF_AND_SEL; ++i) {
-            free(values[i]);
+            mrb_free(mrb, values[i]);
         }
-        free(values);
+        mrb_free(mrb, values);
     }
-    free(arg_types);
-    free(arg_type_class);
+    mrb_free(mrb, arg_types);
+    mrb_free(mrb, arg_type_class);
 //    [pool release];
 
     return mresult;
@@ -540,7 +540,7 @@ cocoa_object_destructor(mrb_state *mrb, void *p)
     if(data->autorelease) {
         [obj release];
     }
-    free(p);
+    mrb_free(mrb, p);
 }
 
 

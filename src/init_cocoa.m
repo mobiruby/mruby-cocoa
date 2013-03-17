@@ -51,8 +51,8 @@ mrb_mruby_cocoa_gem_init(mrb_state *mrb)
     }
 
     if(cocoa_mrb_states == NULL) {
-        cocoa_autorelease_pool = malloc(sizeof(NSAutoreleasePool *) * MAX_COCOA_MRB_STATE_COUNT);
-        cocoa_mrb_states = malloc(sizeof(mrb_state *) * MAX_COCOA_MRB_STATE_COUNT);
+        cocoa_autorelease_pool = mrb_malloc(mrb, sizeof(NSAutoreleasePool *) * MAX_COCOA_MRB_STATE_COUNT);
+        cocoa_mrb_states = mrb_malloc(mrb, sizeof(mrb_state *) * MAX_COCOA_MRB_STATE_COUNT);
         for(int i = 0; i < MAX_COCOA_MRB_STATE_COUNT; ++i) {
             cocoa_mrb_states[i] = NULL;
             cocoa_autorelease_pool[i] = NULL;
