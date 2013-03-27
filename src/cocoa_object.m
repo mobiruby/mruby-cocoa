@@ -36,7 +36,7 @@ static struct mrb_data_type cocoa_object_data_type;
 /*
  * internal method
  */
-static mrb_value
+mrb_value
 cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 {
     //printf("new_with_id=%p\n", pointer);
