@@ -87,6 +87,10 @@ class CFunc::Double
   def self.objc_type_encode; 'd'; end
 end
 
+class NilClass
+  def self.objc_type_encode; '@'; end
+end
+
 class String
   def self.objc_type_encode; '*'; end
   def to_ffi_value(ffi_type)

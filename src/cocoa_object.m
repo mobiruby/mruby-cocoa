@@ -379,8 +379,11 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     values = mrb_malloc(mrb, sizeof(void*) * cocoa_argc);
     for(i = 0; i < margc; i++) {
         mrb_value marg = margs[i];
-        if(i > [signature numberOfArguments] - SELF_AND_SEL) {
-            arg_types[i+ SELF_AND_SEL] = mrb_value_to_mrb_ffi_type(mrb, marg)->ffi_type_value;
+        if(i >= [signature numberOfArguments] - SELF_AND_SEL) {
+            arg_types[i + SELF_AND_SEL] = mrb_value_to_mrb_ffi_type(mrb, marg)->ffi_type_value;
+            mrb_value args[1];
+            args[0] = mrb_nil_value();
+            marg = mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args);
         }
         else {
             const char *argtype = [signature getArgumentTypeAtIndex:i + SELF_AND_SEL];
