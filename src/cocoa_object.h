@@ -19,6 +19,7 @@ struct cocoa_object_data {
     bool autorelease;
 };
 
-void init_cocoa_object(mrb_state *mrb, struct RClass* module);
+void
+init_cocoa_object(mrb_state *mrb, struct RClass* module);
 
 #endif

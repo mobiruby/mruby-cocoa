@@ -33,10 +33,11 @@
 
 static struct mrb_data_type cocoa_object_data_type;
 
+
 /*
  * internal method
  */
-static mrb_value
+mrb_value
 cocoa_object_new_with_id(mrb_state *mrb, id pointer)
 {
     //printf("new_with_id=%p\n", pointer);
@@ -326,7 +327,6 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 
     mrb_value mresult = mrb_nil_value();
     void **values = NULL;
-    mrb_value *arg_type_class = NULL;
     ffi_type **arg_types = NULL;
 
     int margc, i;
@@ -336,97 +336,97 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
 
     char *method_name = mrb_string_value_ptr(mrb, method_name_mrb);
     SEL sel = NSSelectorFromString([NSString stringWithCString: method_name encoding:NSUTF8StringEncoding]);
-    //printf("m1 %s\n",method_name);
 
     int cocoa_argc = margc + SELF_AND_SEL;
 
     id obj = get_cfunc_pointer_data((struct cfunc_type_data *)data);
-    Method method;
-    if(obj == [obj class]) { // if(self is class) 
+    NSMethodSignature *signature = nil;
+    void *method = nil;
+    Class klass;
+    if(obj == [obj class]) { // if(self is class)
         if(target == mrb_intern(mrb, "super")) {
-            method = class_getClassMethod(class_getSuperclass(obj), sel);
+        klass = [obj superclass];
+            signature = [klass methodSignatureForSelector: sel];
+            method = [klass methodForSelector: sel];
         }
         else {
-            method = class_getClassMethod(obj, sel);
+            signature = [obj methodSignatureForSelector: sel];
+            method = [obj methodForSelector: sel];
         }
     }
     else {
-        Class klass = [(id)(get_cfunc_pointer_data((struct cfunc_type_data *)data)) class];
+        klass = [obj class];
         if(target == mrb_intern(mrb, "super")) {
-            klass = class_getSuperclass(klass);
+        klass = [obj superclass];
+            signature = [klass instanceMethodSignatureForSelector: sel];
+            method = [klass instanceMethodForSelector: sel];
         }
-        method = class_getInstanceMethod(klass, sel);
+        else {
+            signature = [obj methodSignatureForSelector: sel];
+            method = [obj methodForSelector: sel];
+        }
     }
     if(method == NULL) {
         mrb_raisef(mrb, E_NOMETHOD_ERROR, "no method name: %s", method_name);
     }
-    
-    unsigned cocoa_method_argc = method_getNumberOfArguments(method);
-    void *fp = method_getImplementation(method);
-    
-    if(cocoa_method_argc > cocoa_argc) {
-        mrb_raise(mrb, E_ARGUMENT_ERROR, "ignore arguments number");
-    }
-    
-    //printf("m3 %s\n",method_name);
-    arg_type_class = mrb_malloc(mrb, sizeof(mrb_value) * cocoa_argc);
-    arg_types = mrb_malloc(mrb, sizeof(ffi_type*) * cocoa_argc);
-    for(i = 0; i < cocoa_method_argc; i++) {
-        char *argtype = method_copyArgumentType(method, i);
-        arg_type_class[i] = objc_type_to_cfunc_type(mrb, argtype);
-        mrb_free(mrb, argtype);
-        arg_types[i] = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(arg_type_class[i]))->ffi_type_value;
-    }
-    //printf("m4 %s\n",method_name);
 
-    for(;i < cocoa_argc; i++) {
-        arg_types[i] = mrb_value_to_mrb_ffi_type(mrb, margs[i - 2])->ffi_type_value;
-    }
-    //printf("m5 %s\n",method_name);
-    
+    mrb_sym sym_to_ffi_value = mrb_intern(mrb, "to_ffi_value");
+ 
+    //printf("m3 %s\n",method_name);
+    arg_types = mrb_malloc(mrb, sizeof(ffi_type*) * (margc + SELF_AND_SEL));
+    arg_types[0] = &ffi_type_pointer;
+    arg_types[1] = &ffi_type_pointer;
     values = mrb_malloc(mrb, sizeof(void*) * cocoa_argc);
+    for(i = 0; i < margc; i++) {
+        mrb_value marg = margs[i];
+        if(i >= [signature numberOfArguments] - SELF_AND_SEL) {
+            arg_types[i + SELF_AND_SEL] = mrb_value_to_mrb_ffi_type(mrb, marg)->ffi_type_value;
+            mrb_value args[1];
+            args[0] = mrb_nil_value();
+            marg = mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args);
+        }
+        else {
+            const char *argtype = [signature getArgumentTypeAtIndex:i + SELF_AND_SEL];
+            mrb_value arg_type_class = objc_type_to_cfunc_type(mrb, argtype);
+            arg_types[i + SELF_AND_SEL] = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(arg_type_class))->ffi_type_value;
+            if(!mrb_respond_to(mrb, marg, sym_to_ffi_value)) {
+                marg = mrb_funcall(mrb, arg_type_class, "new", 1, marg);
+            }
+            mrb_value args[1];
+            args[0] = arg_type_class;
+            marg = mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args);
+        }
+        values[i + SELF_AND_SEL] = cfunc_pointer_ptr(marg);
+    }
     
     values[0] = mrb_malloc(mrb, sizeof(void*));
-    *((void***)values)[0] = get_cfunc_pointer_data((struct cfunc_type_data *)data);
+    *((void***)values)[0] = obj;
     
     values[1] = mrb_malloc(mrb, sizeof(void*));
     *((void***)values)[1] = sel;
     
-    mrb_sym sym_to_ffi_value = mrb_intern(mrb, "to_ffi_value");
-    for(i = SELF_AND_SEL; i < cocoa_argc; ++i) {
-        mrb_value marg = margs[i - SELF_AND_SEL];
-        if(!mrb_respond_to(mrb, margs[i - SELF_AND_SEL], sym_to_ffi_value)) {
-            marg = mrb_funcall(mrb, arg_type_class[i], "new", 1, marg);
-        }
-        mrb_value args[1];
-        args[0] = arg_type_class[i];
-        values[i] = cfunc_pointer_ptr(mrb_funcall_argv(mrb, marg, sym_to_ffi_value, 1, args));
+    void *result_ptr = NULL;
+    ffi_type *result_ffi_type = &ffi_type_void;
+    mrb_value result_type_class;
+    const char *ret_type = [signature methodReturnType];
+    if(ret_type) {
+        result_type_class = objc_type_to_cfunc_type(mrb, ret_type);
+        result_ffi_type = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(result_type_class))->ffi_type_value;
+        result_ptr = mrb_malloc(mrb, [signature methodReturnLength]);
     }
-    //printf("m6 %s\n",method_name);
-    
-    char *result_cocoa_type = method_copyReturnType(method);
-    mrb_value result_type_class = objc_type_to_cfunc_type(mrb, result_cocoa_type);
-    mrb_free(mrb, result_cocoa_type);
-
-    ffi_type *result_ffi_type = rclass_to_mrb_ffi_type(mrb, mrb_class_ptr(result_type_class))->ffi_type_value;
-    void *result_ptr = mrb_malloc(mrb, result_ffi_type->size);
-    if(result_ffi_type->type == FFI_TYPE_STRUCT) {
-        int size = mrb_fixnum(mrb_funcall(mrb, result_type_class, "size", 0));
-        result_ptr = mrb_malloc(mrb, size);
-    }
-
     ffi_cif cif;
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, cocoa_argc, result_ffi_type, arg_types) == FFI_OK) {
         // todo: should handling objective-c exception
-        ffi_call(&cif, fp, result_ptr, values);
-
-        mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
-        if(strcmp("alloc", method_name) == 0) {
-            mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
-            [(*(id*)result_ptr) autorelease];
-        }
-        else {
-            mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
+        ffi_call(&cif, method, result_ptr, values);
+        if(result_ptr) {
+            mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
+            if(strcmp("alloc", method_name) == 0) {
+                mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
+                [(*(id*)result_ptr) autorelease];
+            }
+            else {
+                mresult = mrb_funcall(mrb, result_type_class, "refer", 1, mresult_p);
+            }
         }
     }
     else {
@@ -444,12 +444,10 @@ error_exit:
         mrb_free(mrb, values);
     }
     mrb_free(mrb, arg_types);
-    mrb_free(mrb, arg_type_class);
 //    [pool release];
 
     return mresult;
 }
-
 
 /*
  * call-seq:
