@@ -14,9 +14,10 @@ MRuby::Build.new do |conf|
   [conf.cc, conf.cxx, conf.objc].each do |cc|
     cc.defines << %w()
   end
-  conf.gem :git => 'git@github.com:mobiruby/mruby-cfunc.git' do |g|
+  conf.gem :git => 'https://github.com/mobiruby/mruby-cfunc.git' do |g|
     # g.use_pkg_config
     g.download_libffi
   end
+  conf.gem "#{root}/mrbgems/mruby-print"
   conf.gem File.expand_path(File.dirname(__FILE__))
 end
