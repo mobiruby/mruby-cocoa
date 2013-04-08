@@ -4,6 +4,11 @@ Interface to Cocoa on mruby.
 it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#documentation/Cocoa/Reference/ObjCRuntimeRef/Reference/reference.html) and [mruby-cfunc](https://github.com/mobiruby/mruby-cfunc/).
 
 
+## Build status
+
+[![Build Status](https://secure.travis-ci.org/mobiruby/mruby-cocoa.png)](http://travis-ci.org/mobiruby/mruby-cocoa)
+
+
 ## First step
 
     make test
