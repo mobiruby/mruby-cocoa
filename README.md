@@ -26,7 +26,7 @@ it's based on [Objective-C Runtime](https://developer.apple.com/library/mac/#doc
 - [x] define protocol - instance method
 - [x] define protocol - class method
 - [x] adopt protocol
-- [ ] handle exception
+- [x] handle exception
 - [ ] research NSCopying
 
 - pending

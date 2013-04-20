@@ -31,6 +31,9 @@ module Cocoa
   end
 end
 
+class ObjCException < ::Exception
+end
+
 class CFunc::Void
   def self.objc_type_encode; 'v'; end
 end

@@ -19,5 +19,6 @@ MRuby::Build.new do |conf|
     g.download_libffi
   end
   conf.gem "#{root}/mrbgems/mruby-print"
+  conf.gem "#{root}/mrbgems/mruby-enum-ext"
   conf.gem File.expand_path(File.dirname(__FILE__))
 end

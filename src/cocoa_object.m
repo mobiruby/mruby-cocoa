@@ -416,8 +416,13 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
     }
     ffi_cif cif;
     if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, cocoa_argc, result_ffi_type, arg_types) == FFI_OK) {
-        // todo: should handling objective-c exception
-        ffi_call(&cif, method, result_ptr, values);
+        @try {
+            ffi_call(&cif, method, result_ptr, values);
+        }
+        @catch (NSException *exception) {
+            cfunc_mrb_raise_without_jump(mrb, mrb_class_obj_get(mrb, "ObjCException"), "%s:%s", [[exception name] UTF8String], [[exception reason] UTF8String]);
+            goto error_exit;
+        }
         if(result_ptr) {
             mrb_value mresult_p = cfunc_pointer_new_with_pointer(mrb, result_ptr, 1);
             if(strcmp("alloc", method_name) == 0) {
