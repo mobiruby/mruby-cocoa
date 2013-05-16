@@ -420,7 +420,7 @@ cocoa_object_objc_msgSend(mrb_state *mrb, mrb_value self)
             ffi_call(&cif, method, result_ptr, values);
         }
         @catch (NSException *exception) {
-            cfunc_mrb_raise_without_jump(mrb, mrb_class_obj_get(mrb, "ObjCException"), "%s:%s", [[exception name] UTF8String], [[exception reason] UTF8String]);
+            cfunc_mrb_raise_without_jump(mrb, mrb_class_get(mrb, "ObjCException"), "%s:%s", [[exception name] UTF8String], [[exception reason] UTF8String]);
             goto error_exit;
         }
         if(result_ptr) {
