@@ -38,7 +38,7 @@ cocoa_mrb_state(mrb_state *mrb, mrb_value klass)
 void
 set_cocoa_state(mrb_state* mrb, struct cocoa_state *state)
 {
-    mrb_value mstate = mrb_voidp_value(state);
+    mrb_value mstate = mrb_voidp_value(mrb, state);
     struct RClass* klass = (struct RClass*)mrb_object(mrb_vm_const_get(mrb, mrb_intern(mrb, "Cocoa")));
     mrb_mod_cv_set(mrb, klass, mrb_intern(mrb, "cocoa_state"), mstate);
 }
